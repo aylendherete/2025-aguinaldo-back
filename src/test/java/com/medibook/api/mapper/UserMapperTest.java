@@ -27,7 +27,7 @@ class UserMapperTest {
             "MALE",
             null,
             null,
-            null
+            null, null, null
         );
 
         User user = mapper.toUser(dto, "PATIENT", "hashed_password");
@@ -58,7 +58,7 @@ class UserMapperTest {
             "MALE",
             "ML123",
             "Cardiology",
-            30
+            30, null, null
         );
 
         User user = mapper.toUser(dto, "DOCTOR", "hashed_password");

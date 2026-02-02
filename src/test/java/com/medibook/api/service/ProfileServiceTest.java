@@ -67,7 +67,9 @@ class ProfileServiceTest {
                 null, // gender
                 null, // medicalLicense
                 null, // specialty
-                null  // slotDurationMin
+                null, // slotDurationMin
+                null, // healthInsurance
+                null  // healthPlan
         );
     }
 

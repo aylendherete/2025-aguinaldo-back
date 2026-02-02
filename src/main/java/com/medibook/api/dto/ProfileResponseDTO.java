@@ -22,4 +22,7 @@ public class ProfileResponseDTO {
     private String medicalLicense;
     private String specialty;
     private Integer slotDurationMin;
+
+    private String healthInsurance;
+    private String healthPlan;
 }

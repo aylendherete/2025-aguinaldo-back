@@ -30,5 +30,12 @@ public record ProfileUpdateRequestDTO(
 
     @Min(value = 1, message = "Slot duration must be positive")
     @Max(value = 180, message = "Slot duration must be at most 180 minutes")
-    Integer slotDurationMin
+    Integer slotDurationMin,
+
+
+    @Size(max = 50, message = "Health insurance must be less than 50 characters")
+    String healthInsurance,
+
+    @Size(max = 50, message = "Health plan must be less than 50 characters")
+    String healthPlan
 ) {}

@@ -34,7 +34,7 @@ class RegisterRequestDTOTest {
             "MALE",
             null,
             null,
-            null
+            null, null, null
         );
 
         var violations = validator.validate(dto);
@@ -54,7 +54,7 @@ class RegisterRequestDTOTest {
             "MALE",
             null,
             null,
-            null
+            null, null, null
         );
 
         var violations = validator.validate(dto);
@@ -78,7 +78,7 @@ class RegisterRequestDTOTest {
             "MALE",
             null,
             null,
-            null
+            null, null, null
         );
 
         var violations = validator.validate(dto);
@@ -103,6 +103,7 @@ class RegisterRequestDTOTest {
             null,  // medicalLicense sigue siendo opcional
             null,  // specialty sigue siendo opcional
             null   // slotDurationMin sigue siendo opcional
+, null, null
         );
 
         var violations = validator.validate(dto);
@@ -122,7 +123,7 @@ class RegisterRequestDTOTest {
             "MALE",  // Agregado gender obligatorio
             "ML123",
             "Cardiology",
-            -1
+            -1, null, null
         );
 
         var violations = validator.validate(dto);
@@ -143,7 +144,7 @@ class RegisterRequestDTOTest {
             "MALE",  // Agregado gender obligatorio
             null,
             null,
-            null
+            null, null, null
         );
 
         var violations = validator.validate(dto);
@@ -164,7 +165,7 @@ class RegisterRequestDTOTest {
             "MALE",  // Agregado gender obligatorio
             null,
             null,
-            null
+            null, null, null
         );
 
         var violations = validator.validate(dto);
@@ -185,7 +186,7 @@ class RegisterRequestDTOTest {
             "MALE",  // Agregado gender obligatorio
             null,
             null,
-            null
+            null, null, null
         );
 
         var violations = validator.validate(dto);

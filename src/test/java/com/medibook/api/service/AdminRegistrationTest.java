@@ -55,7 +55,7 @@ class AdminRegistrationTest {
             "MALE",
             null,
             null,
-            null
+            null, null, null
         );
 
         User user = new User();

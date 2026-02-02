@@ -32,7 +32,8 @@ public class UserMapper {
             profile.setSlotDurationMin(dto.slotDurationMin());
             user.setDoctorProfile(profile);
         }
-
+        user.setHealthInsurance(dto.healthInsurance());
+        user.setHealthPlan(dto.healthPlan());
         return user;
     }
 
