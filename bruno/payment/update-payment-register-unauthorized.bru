@@ -1,0 +1,27 @@
+meta {
+  name: Update Payment Register Unauthorized
+  type: http
+  seq: 9
+}
+
+patch {
+  url: {{baseUrl}}/api/payments/turn/{{turnId}}
+  body:json
+  auth: none
+}
+
+assert {
+  res.status: eq 401
+}
+
+body:json{
+  {
+      "paymentStatus": "PAID"
+    }
+}
+
+tests {
+  test("Should block unauthenticated payment updates", function() {
+    expect(res.getStatus()).to.equal(401);
+  });
+}

@@ -1,0 +1,44 @@
+meta {
+  name: Update Payment Register
+  type: http
+  seq: 7
+}
+
+patch {
+  url: {{baseUrl}}/api/payments/turn/{{turnId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{doctorAccessToken}}
+}
+
+body:json{    {
+      "paymentStatus": "HEALTH INSURANCE",
+      "paymentAmount": 180.5,
+      "copaymentAmount": 30.0,
+      "method": "CREDIT CARD",
+      "payedAt": "2025-12-01T10:00:00Z"
+    }
+
+}    
+
+assert {
+  res.status: eq 200
+  res.body.paymentStatus: eq "HEALTH INSURANCE"
+  res.body.turnId: eq {{turnId}}
+}
+
+tests {
+  test("Doctor should update payment register", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().paymentStatus).to.equal("HEALTH INSURANCE");
+  });
+
+  test("Payment register should capture payment amounts", function() {
+    const body = res.getBody();
+    expect(body.paymentAmount).to.equal(180.5);
+    expect(body.copaymentAmount).to.equal(30.0);
+  });
+}

@@ -1,8 +1,10 @@
 package com.medibook.api.service;
 
+import com.medibook.api.dto.Payment.PaymentRegisterRequestDTO;
 import com.medibook.api.dto.Payment.PaymentRegisterResponseDTO;
 import com.medibook.api.entity.PaymentRegister;
 import com.medibook.api.entity.TurnAssigned;
+import com.medibook.api.entity.User;
 import com.medibook.api.mapper.PaymentRegisterMapper;
 import com.medibook.api.repository.PaymentRegisterRepository;
 import com.medibook.api.repository.TurnAssignedRepository;
@@ -15,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -41,13 +44,19 @@ class PaymentRegisterServiceTest {
     private TurnAssigned turn;
     private PaymentRegister savedPayment;
     private PaymentRegisterResponseDTO responseDTO;
+    private User doctor;
 
     @BeforeEach
     void setUp() {
         turnId = UUID.randomUUID();
+        doctor = new User();
+        doctor.setId(UUID.randomUUID());
+        doctor.setRole("DOCTOR");
+
         turn = TurnAssigned.builder()
                 .id(turnId)
                 .status("SCHEDULED")
+                .doctor(doctor)
                 .build();
 
         savedPayment = PaymentRegister.builder()
@@ -152,5 +161,163 @@ class PaymentRegisterServiceTest {
                 paymentRegisterService.getPaymentRegister(turnId));
 
         assertEquals("Payment register not found for this turn", exception.getMessage());
+    }
+
+    @Test
+    void updatePaymentRegister_asDoctor_updatesFields() {
+        PaymentRegisterRequestDTO requestDTO = new PaymentRegisterRequestDTO();
+        requestDTO.setPaymentStatus("PAID");
+        requestDTO.setPaymentAmount(150.0);
+        requestDTO.setMethod("CREDIT CARD");
+        requestDTO.setPayedAt(OffsetDateTime.now());
+
+        when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
+        when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.of(savedPayment));
+        when(paymentRepo.save(any(PaymentRegister.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(mapper.toDTO(any(PaymentRegister.class))).thenReturn(responseDTO);
+
+        PaymentRegisterResponseDTO result = paymentRegisterService.updatePaymentRegister(
+                turnId,
+                requestDTO,
+                doctor.getId(),
+                doctor.getRole());
+
+        assertNotNull(result);
+
+        ArgumentCaptor<PaymentRegister> captor = ArgumentCaptor.forClass(PaymentRegister.class);
+        verify(paymentRepo).save(captor.capture());
+        PaymentRegister updated = captor.getValue();
+        assertEquals("PAID", updated.getPaymentStatus());
+        assertEquals(150.0, updated.getPaymentAmount());
+        assertEquals("CREDIT CARD", updated.getMethod());
+        assertEquals(requestDTO.getPayedAt().toInstant(), updated.getLastUpdateStatus());
+        assertSame(updated, turn.getPaymentRegister());
+        assertNull(updated.getCopaymentAmount());
+    }
+
+    @Test
+    void updatePaymentRegister_whenRegisterMissing_throwsException() {
+        PaymentRegisterRequestDTO requestDTO = new PaymentRegisterRequestDTO();
+        when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
+        when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.empty());
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                paymentRegisterService.updatePaymentRegister(turnId, requestDTO, doctor.getId(), doctor.getRole()));
+
+        assertEquals("Payment register not found for this turn", exception.getMessage());
+        verify(paymentRepo, never()).save(any());
+    }
+
+    @Test
+    void updatePaymentRegister_whenDoctorNotOwner_throwsException() {
+        PaymentRegisterRequestDTO requestDTO = new PaymentRegisterRequestDTO();
+        User anotherDoctor = new User();
+        anotherDoctor.setId(UUID.randomUUID());
+        anotherDoctor.setRole("DOCTOR");
+
+        turn.setDoctor(anotherDoctor);
+
+        when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                paymentRegisterService.updatePaymentRegister(turnId, requestDTO, doctor.getId(), doctor.getRole()));
+
+        assertEquals("You are not allowed to update this payment register", exception.getMessage());
+        verify(paymentRepo, never()).save(any());
+    }
+
+    @Test
+    void updatePaymentRegister_withInvalidStatus_throwsException() {
+        PaymentRegisterRequestDTO requestDTO = new PaymentRegisterRequestDTO();
+        requestDTO.setPaymentStatus("INVALID");
+
+        when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
+        when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.of(savedPayment));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                paymentRegisterService.updatePaymentRegister(turnId, requestDTO, doctor.getId(), doctor.getRole()));
+
+        assertEquals("Invalid payment status", exception.getMessage());
+        verify(paymentRepo, never()).save(any());
+    }
+
+    @Test
+    void updatePaymentRegister_healthInsuranceAllowsCopayment() {
+        PaymentRegisterRequestDTO requestDTO = new PaymentRegisterRequestDTO();
+        requestDTO.setPaymentStatus("health insurance");
+        requestDTO.setCopaymentAmount(45.0);
+
+        when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
+        when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.of(savedPayment));
+        when(paymentRepo.save(any(PaymentRegister.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(mapper.toDTO(any(PaymentRegister.class))).thenReturn(responseDTO);
+
+        PaymentRegisterResponseDTO result = paymentRegisterService.updatePaymentRegister(
+                turnId,
+                requestDTO,
+                doctor.getId(),
+                doctor.getRole());
+
+        assertNotNull(result);
+
+        ArgumentCaptor<PaymentRegister> captor = ArgumentCaptor.forClass(PaymentRegister.class);
+        verify(paymentRepo).save(captor.capture());
+        PaymentRegister updated = captor.getValue();
+        assertEquals("HEALTH INSURANCE", updated.getPaymentStatus());
+        assertEquals(45.0, updated.getCopaymentAmount());
+        assertSame(updated, turn.getPaymentRegister());
+    }
+
+    @Test
+    void updatePaymentRegister_copaymentWithoutHealthInsurance_throwsException() {
+        PaymentRegisterRequestDTO requestDTO = new PaymentRegisterRequestDTO();
+        requestDTO.setCopaymentAmount(30.0);
+
+        when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
+        when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.of(savedPayment));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                paymentRegisterService.updatePaymentRegister(turnId, requestDTO, doctor.getId(), doctor.getRole()));
+
+        assertEquals("Copayment amount can only be set when payment status is HEALTH INSURANCE", exception.getMessage());
+        verify(paymentRepo, never()).save(any());
+    }
+
+    @Test
+    void updatePaymentRegister_withLowercaseMethod_normalizesAndPersists() {
+        PaymentRegisterRequestDTO requestDTO = new PaymentRegisterRequestDTO();
+        requestDTO.setMethod("online payment");
+
+        when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
+        when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.of(savedPayment));
+        when(paymentRepo.save(any(PaymentRegister.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(mapper.toDTO(any(PaymentRegister.class))).thenReturn(responseDTO);
+
+        PaymentRegisterResponseDTO result = paymentRegisterService.updatePaymentRegister(
+                turnId,
+                requestDTO,
+                doctor.getId(),
+                doctor.getRole());
+
+        assertNotNull(result);
+
+        ArgumentCaptor<PaymentRegister> captor = ArgumentCaptor.forClass(PaymentRegister.class);
+        verify(paymentRepo).save(captor.capture());
+        assertEquals("ONLINE PAYMENT", captor.getValue().getMethod());
+    }
+
+    @Test
+    void updatePaymentRegister_withInvalidMethod_throwsException() {
+        PaymentRegisterRequestDTO requestDTO = new PaymentRegisterRequestDTO();
+        requestDTO.setMethod("BITCOIN");
+
+        when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
+        when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.of(savedPayment));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                paymentRegisterService.updatePaymentRegister(turnId, requestDTO, doctor.getId(), doctor.getRole()));
+
+        assertEquals("Invalid payment method", exception.getMessage());
+        verify(paymentRepo, never()).save(any());
     }
 }
