@@ -5,6 +5,8 @@ import com.medibook.api.dto.Turn.TurnResponseDTO;
 import com.medibook.api.entity.TurnAssigned;
 import com.medibook.api.entity.TurnFile;
 import com.medibook.api.entity.User;
+import com.medibook.api.dto.Payment.PaymentRegisterResponseDTO;
+import com.medibook.api.entity.PaymentRegister;
 import com.medibook.api.repository.RatingRepository;
 import com.medibook.api.service.TurnFileService;
 import org.springframework.stereotype.Component;
@@ -18,6 +20,7 @@ public class TurnAssignedMapper {
 
     private final RatingRepository ratingRepository;
     private final TurnFileService turnFileService;
+    private final PaymentRegisterMapper paymentRegisterMapper;
 
     public TurnAssigned toEntity(TurnCreateRequestDTO dto, User doctor) {
         return TurnAssigned.builder()
@@ -48,6 +51,14 @@ public class TurnAssignedMapper {
         }
         
         Optional<TurnFile> turnFile = turnFileService.getTurnFileInfo(turn.getId());
+        PaymentRegister paymentRegister = turn.getPaymentRegister();
+        PaymentRegisterResponseDTO paymentRegisterDTO = null;
+        String paymentStatus = null;
+
+        if (paymentRegister != null) {
+            paymentRegisterDTO = paymentRegisterMapper.toDTO(paymentRegister);
+            paymentStatus = paymentRegister.getPaymentStatus();
+        }
         
         return TurnResponseDTO.builder()
                 .id(turn.getId())
@@ -66,6 +77,8 @@ public class TurnAssignedMapper {
                 .fileUrl(turnFile.map(TurnFile::getFileUrl).orElse(null))
                 .fileName(turnFile.map(TurnFile::getFileName).orElse(null))
                 .uploadedAt(turnFile.map(TurnFile::getUploadedAt).orElse(null))
+                .paymentStatus(paymentStatus)
+                .paymentRegister(paymentRegisterDTO)
                 .build();
     }
 }

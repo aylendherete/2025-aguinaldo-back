@@ -1,0 +1,35 @@
+meta {
+  name: Get Payment Register
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/payments/turn/{{turnId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.id: isDefined
+  res.body.turnId: isDefined
+  res.body.paymentStatus: isDefined
+}
+
+tests {
+  test("Should fetch payment register successfully", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().turnId).to.exist;
+  });
+  
+  test("Payment register should include audit fields", function() {
+    const body = res.getBody();
+    expect(body).to.have.property('payedAt');
+    expect(body).to.have.property('method');
+  });
+}

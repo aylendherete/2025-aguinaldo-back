@@ -38,6 +38,7 @@ public class TurnAssignedService {
     private final TurnFileService turnFileService;
     private final BadgeEvaluationTriggerService badgeEvaluationTrigger;
     private final MedicalCheckApiService medicalCheckApiService;
+    private final PaymentRegisterService paymentRegisterService;
     private static final ZoneId ARGENTINA_ZONE = ZoneId.of("America/Argentina/Buenos_Aires");
 
     public TurnResponseDTO createTurn(TurnCreateRequestDTO dto) {
@@ -79,6 +80,12 @@ public class TurnAssignedService {
                 .build();
 
         TurnAssigned saved = turnRepo.save(turn);
+
+        try {
+            paymentRegisterService.createPaymentRegisterForTurn(saved);
+        } catch (RuntimeException e) {
+            log.error("Unable to create payment register for turn {}: {}", saved.getId(), e.getMessage());
+        }
         
         OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
         long daysDifference = java.time.Duration.between(now, turn.getScheduledAt()).toDays();

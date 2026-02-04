@@ -1,0 +1,25 @@
+meta {
+  name: Get Payment Register Forbidden
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/payments/turn/{{foreignTurnId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+assert {
+  res.status: eq 403
+}
+
+tests {
+  test("Should block access for non-owners", function() {
+    expect(res.getStatus()).to.equal(403);
+  });
+}

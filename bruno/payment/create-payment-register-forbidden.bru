@@ -1,0 +1,25 @@
+meta {
+  name: Create Payment Register Forbidden
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/payments/turn/{{turnId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+assert {
+  res.status: eq 403
+}
+
+tests {
+  test("Should prevent non-admin creation", function() {
+    expect(res.getStatus()).to.equal(403);
+  });
+}

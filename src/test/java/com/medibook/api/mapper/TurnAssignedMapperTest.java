@@ -3,6 +3,7 @@ package com.medibook.api.mapper;
 import com.medibook.api.dto.Turn.TurnCreateRequestDTO;
 import com.medibook.api.dto.Turn.TurnResponseDTO;
 import com.medibook.api.entity.DoctorProfile;
+import com.medibook.api.entity.PaymentRegister;
 import com.medibook.api.entity.TurnAssigned;
 import com.medibook.api.entity.TurnFile;
 import com.medibook.api.entity.User;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Instant;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -29,6 +31,7 @@ import static org.mockito.Mockito.when;
 class TurnAssignedMapperTest {
 
     private TurnAssignedMapper turnAssignedMapper;
+    private PaymentRegisterMapper paymentRegisterMapper;
     
     @Mock
     private RatingRepository ratingRepository;
@@ -48,7 +51,8 @@ class TurnAssignedMapperTest {
 
     @BeforeEach
     void setUp() {
-        turnAssignedMapper = new TurnAssignedMapper(ratingRepository, turnFileService);
+        paymentRegisterMapper = new PaymentRegisterMapper();
+        turnAssignedMapper = new TurnAssignedMapper(ratingRepository, turnFileService, paymentRegisterMapper);
         
         doctorId = UUID.randomUUID();
         patientId = UUID.randomUUID();
@@ -83,6 +87,32 @@ class TurnAssignedMapperTest {
                 .scheduledAt(scheduledDateTime)
                 .status("RESERVED")
                 .build();
+    }
+
+    @Test
+    void toDTO_EntityWithPaymentRegister_ReturnsPaymentData() {
+        PaymentRegister paymentRegister = PaymentRegister.builder()
+                .id(UUID.randomUUID())
+                .turnId(turnId)
+                .paymentStatus("PENDING")
+                .paymentAmount(150.0)
+                .copaymentAmount(20.0)
+                .method("CREDIT_CARD")
+                .lastUpdateStatus(Instant.now())
+                .build();
+
+        turnAssigned.setPaymentRegister(paymentRegister);
+
+        TurnResponseDTO result = turnAssignedMapper.toDTO(turnAssigned);
+
+        assertNotNull(result.getPaymentRegister());
+        assertEquals("PENDING", result.getPaymentStatus());
+        assertEquals(paymentRegister.getId(), result.getPaymentRegister().getId());
+        assertEquals(paymentRegister.getTurnId(), result.getPaymentRegister().getTurnId());
+        assertEquals(paymentRegister.getPaymentAmount(), result.getPaymentRegister().getPaymentAmount());
+        assertEquals(paymentRegister.getCopaymentAmount(), result.getPaymentRegister().getCopaymentAmount());
+        assertEquals(paymentRegister.getMethod(), result.getPaymentRegister().getMethod());
+        assertNotNull(result.getPaymentRegister().getPayedAt());
     }
 
     private User createUser(UUID id, String email, Long dni, String role, String status, String name, String surname) {
@@ -155,6 +185,8 @@ class TurnAssignedMapperTest {
         assertEquals("María González", result.getPatientName());
         assertEquals(scheduledDateTime, result.getScheduledAt());
         assertEquals("RESERVED", result.getStatus());
+        assertNull(result.getPaymentStatus());
+        assertNull(result.getPaymentRegister());
     }
 
     @Test
@@ -178,6 +210,8 @@ class TurnAssignedMapperTest {
         assertNull(result.getPatientName());
         assertEquals(scheduledDateTime, result.getScheduledAt());
         assertEquals("AVAILABLE", result.getStatus());
+        assertNull(result.getPaymentStatus());
+        assertNull(result.getPaymentRegister());
     }
 
     @Test
@@ -202,6 +236,8 @@ class TurnAssignedMapperTest {
         assertEquals("María González", result.getPatientName());
         assertEquals(scheduledDateTime, result.getScheduledAt());
         assertEquals("RESERVED", result.getStatus());
+        assertNull(result.getPaymentStatus());
+        assertNull(result.getPaymentRegister());
     }
 
     @Test

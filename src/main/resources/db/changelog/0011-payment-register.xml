@@ -38,6 +38,20 @@
                                 constraintName="fk_payment_register_turn"
                                 referencedTableName="turns_assigned" referencedColumnNames="id"
                                 onDelete="CASCADE"/>
+
+        <addColumn tableName="turns_assigned">
+            <column name="payment_register_id" type="uuid"/>
+        </addColumn>
+
+        <addUniqueConstraint tableName="turns_assigned"
+                              columnNames="payment_register_id"
+                              constraintName="uq_turns_assigned_payment_register"
+                              deferrable="false" initiallyDeferred="false"/>
+
+        <addForeignKeyConstraint baseTableName="turns_assigned" baseColumnNames="payment_register_id"
+                                constraintName="fk_turns_assigned_payment_register"
+                                referencedTableName="payment_register" referencedColumnNames="id"
+                                onDelete="RESTRICT"/>
     </changeSet>
 
 </databaseChangeLog>

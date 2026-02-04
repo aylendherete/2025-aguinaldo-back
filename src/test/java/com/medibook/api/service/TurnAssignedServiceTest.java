@@ -4,6 +4,7 @@ package com.medibook.api.service;
 import com.medibook.api.dto.Turn.TurnCreateRequestDTO;
 import com.medibook.api.dto.Turn.TurnResponseDTO;
 import com.medibook.api.dto.email.EmailResponseDto;
+import com.medibook.api.entity.PaymentRegister;
 import com.medibook.api.entity.TurnAssigned;
 import com.medibook.api.entity.User;
 import com.medibook.api.mapper.TurnAssignedMapper;
@@ -16,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -59,6 +61,9 @@ class TurnAssignedServiceTest {
     @Mock
     private com.medibook.api.service.BadgeEvaluationTriggerService badgeEvaluationTrigger;
 
+        @Mock
+        private PaymentRegisterService paymentRegisterService;
+
     @InjectMocks
     private TurnAssignedService turnAssignedService;
 
@@ -92,6 +97,19 @@ class TurnAssignedServiceTest {
             .thenReturn(CompletableFuture.completedFuture(successResponse));
         when(emailService.sendAppointmentCancellationToDoctorAsync(anyString(), anyString(), anyString(), anyString(), anyString()))
             .thenReturn(CompletableFuture.completedFuture(successResponse));
+
+                lenient().when(paymentRegisterService.createPaymentRegisterForTurn(any(TurnAssigned.class)))
+                        .thenAnswer(invocation -> {
+                                TurnAssigned turnArg = invocation.getArgument(0);
+                                PaymentRegister paymentRegister = PaymentRegister.builder()
+                                                .id(UUID.randomUUID())
+                                                .turnId(turnArg.getId())
+                                                .paymentStatus("PENDING")
+                                                .lastUpdateStatus(Instant.now())
+                                                .build();
+                                turnArg.setPaymentRegister(paymentRegister);
+                                return paymentRegister;
+                        });
 
         doctorId = UUID.randomUUID();
         patientId = UUID.randomUUID();
@@ -158,6 +176,7 @@ class TurnAssignedServiceTest {
         assertEquals(turnId, result.getId());
         assertEquals(doctorId, result.getDoctorId());
         assertEquals(patientId, result.getPatientId());
+        verify(paymentRegisterService).createPaymentRegisterForTurn(any(TurnAssigned.class));
         assertEquals("SCHEDULED", result.getStatus());
         assertEquals(scheduledAt, result.getScheduledAt());
 

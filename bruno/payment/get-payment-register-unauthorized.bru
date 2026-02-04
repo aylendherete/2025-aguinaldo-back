@@ -1,0 +1,21 @@
+meta {
+  name: Get Payment Register Unauthorized
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/payments/turn/{{turnId}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 401
+}
+
+tests {
+  test("Should block unauthenticated access", function() {
+    expect(res.getStatus()).to.equal(401);
+  });
+}

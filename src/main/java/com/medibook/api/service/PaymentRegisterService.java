@@ -1,5 +1,6 @@
 package com.medibook.api.service;
 
+import java.time.Instant;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -31,16 +32,37 @@ public class PaymentRegisterService {
             throw new RuntimeException("Payment register already exists for this turn");
         }
 
+        PaymentRegister saved = createPaymentRegisterForTurn(turn);
+        return mapper.toDTO(saved);
+    }
+
+    public PaymentRegisterResponseDTO getPaymentRegister(UUID turnId) {
+        PaymentRegister payment = paymentRepo.findByTurnId(turnId)
+            .orElseThrow(() -> new RuntimeException("Payment register not found for this turn"));
+        return mapper.toDTO(payment);
+    }
+
+    public PaymentRegister createPaymentRegisterForTurn(TurnAssigned turn) {
+        if (turn == null || turn.getId() == null) {
+            throw new RuntimeException("Turn information is required to create a payment register");
+        }
+
+        UUID turnId = turn.getId();
+
+        if (paymentRepo.existsByTurnId(turnId) || turn.getPaymentRegister() != null) {
+            throw new RuntimeException("Payment register already exists for this turn");
+        }
+
         PaymentRegister payment = PaymentRegister.builder()
             .turnId(turnId)
             .paymentStatus("PENDING")
-            .lastUpdateStatus(new java.util.Date().toInstant())
+            .lastUpdateStatus(Instant.now())
             .build();
 
         PaymentRegister saved = paymentRepo.save(payment);
+        saved.setTurn(turn);
         turn.setPaymentRegister(saved);
-        turnRepo.save(turn);
 
-        return mapper.toDTO(saved);
+        return saved;
     }
 }
