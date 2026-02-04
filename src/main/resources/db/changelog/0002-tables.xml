@@ -102,6 +102,9 @@
             <column name="status" type="text" defaultValue="SCHEDULED">
                 <constraints nullable="false"/>
             </column>
+
+            <column name="payment_register_id" type="uuid">
+                <constraints nullable="false" unique="true"/>
         </createTable>
         <addForeignKeyConstraint baseTableName="turns_assigned" baseColumnNames="doctor_id"
                                 constraintName="fk_turns_assigned_doctor"
@@ -110,6 +113,11 @@
         <addForeignKeyConstraint baseTableName="turns_assigned" baseColumnNames="patient_id"
                                 constraintName="fk_turns_assigned_patient"
                                 referencedTableName="users" referencedColumnNames="id"
+                                onDelete="RESTRICT"/>
+
+        <addForeignKeyConstraint baseTableName="turns_assigned" baseColumnNames="payment_register_id"
+                                constraintName="fk_payment_register_turns_assigned"
+                                referencedTableName="payment_registers" referencedColumnNames="id"
                                 onDelete="RESTRICT"/>
     </changeSet>
 

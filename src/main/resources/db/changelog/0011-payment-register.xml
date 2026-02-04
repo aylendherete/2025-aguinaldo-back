@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <!-- TURN FILES FEATURE -->
+    <changeSet id="0011-01-payment_register" author="MediBook_Admin">
+        <comment>Add payments related to the turns</comment>
+        <createTable tableName="payment_register">
+            <column name="id" type="uuid" defaultValueComputed="uuid_generate_v4()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="turn_id" type="uuid">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="last_update_status" type="timestamptz" defaultValueComputed="now()">
+                <constraints />
+            </column>
+            <column name="payment_status" type="text" defaultValue="PENDING">
+                <constraints nullable="false"/>
+            </column>
+            <column name="payment_amount" type="numeric(10,2)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="method" type="text">
+                <constraints nullable="true"/>
+            </column>
+            <column name="copayment_amount" type="numeric(10,2)">
+                <constraints nullable="true"/>
+            </column>
+            
+            
+        </createTable>
+        <addForeignKeyConstraint baseTableName="payment_register" baseColumnNames="turn_id"
+                                constraintName="fk_payment_register_turn"
+                                referencedTableName="turns_assigned" referencedColumnNames="id"
+                                onDelete="CASCADE"/>
+    </changeSet>
+
+</databaseChangeLog>

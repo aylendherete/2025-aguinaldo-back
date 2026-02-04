@@ -6,6 +6,9 @@ import java.time.OffsetDateTime;
 import java.time.Instant;
 import java.util.UUID;
 
+import com.medibook.api.dto.Payment.PaymentRegisterResponseDTO;
+
+
 @Data
 @Builder
 public class TurnResponseDTO {
@@ -24,4 +27,6 @@ public class TurnResponseDTO {
     private String fileUrl;
     private String fileName;
     private Instant uploadedAt;
+    private String paymentStatus;
+    private PaymentRegisterResponseDTO paymentRegister;
 }
