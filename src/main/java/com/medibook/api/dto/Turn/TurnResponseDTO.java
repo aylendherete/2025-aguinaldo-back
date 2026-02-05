@@ -27,6 +27,5 @@ public class TurnResponseDTO {
     private String fileUrl;
     private String fileName;
     private Instant uploadedAt;
-    private String paymentStatus;
     private PaymentRegisterResponseDTO paymentRegister;
 }

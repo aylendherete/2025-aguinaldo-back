@@ -53,11 +53,9 @@ public class TurnAssignedMapper {
         Optional<TurnFile> turnFile = turnFileService.getTurnFileInfo(turn.getId());
         PaymentRegister paymentRegister = turn.getPaymentRegister();
         PaymentRegisterResponseDTO paymentRegisterDTO = null;
-        String paymentStatus = null;
 
         if (paymentRegister != null) {
             paymentRegisterDTO = paymentRegisterMapper.toDTO(paymentRegister);
-            paymentStatus = paymentRegister.getPaymentStatus();
         }
         
         return TurnResponseDTO.builder()
@@ -77,7 +75,6 @@ public class TurnAssignedMapper {
                 .fileUrl(turnFile.map(TurnFile::getFileUrl).orElse(null))
                 .fileName(turnFile.map(TurnFile::getFileName).orElse(null))
                 .uploadedAt(turnFile.map(TurnFile::getUploadedAt).orElse(null))
-                .paymentStatus(paymentStatus)
                 .paymentRegister(paymentRegisterDTO)
                 .build();
     }

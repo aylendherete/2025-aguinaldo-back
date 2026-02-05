@@ -106,7 +106,7 @@ class TurnAssignedMapperTest {
         TurnResponseDTO result = turnAssignedMapper.toDTO(turnAssigned);
 
         assertNotNull(result.getPaymentRegister());
-        assertEquals("PENDING", result.getPaymentStatus());
+        assertEquals("PENDING", result.getPaymentRegister().getPaymentStatus());
         assertEquals(paymentRegister.getId(), result.getPaymentRegister().getId());
         assertEquals(paymentRegister.getTurnId(), result.getPaymentRegister().getTurnId());
         assertEquals(paymentRegister.getPaymentAmount(), result.getPaymentRegister().getPaymentAmount());
@@ -185,7 +185,6 @@ class TurnAssignedMapperTest {
         assertEquals("María González", result.getPatientName());
         assertEquals(scheduledDateTime, result.getScheduledAt());
         assertEquals("RESERVED", result.getStatus());
-        assertNull(result.getPaymentStatus());
         assertNull(result.getPaymentRegister());
     }
 
@@ -210,7 +209,6 @@ class TurnAssignedMapperTest {
         assertNull(result.getPatientName());
         assertEquals(scheduledDateTime, result.getScheduledAt());
         assertEquals("AVAILABLE", result.getStatus());
-        assertNull(result.getPaymentStatus());
         assertNull(result.getPaymentRegister());
     }
 
@@ -236,7 +234,6 @@ class TurnAssignedMapperTest {
         assertEquals("María González", result.getPatientName());
         assertEquals(scheduledDateTime, result.getScheduledAt());
         assertEquals("RESERVED", result.getStatus());
-        assertNull(result.getPaymentStatus());
         assertNull(result.getPaymentRegister());
     }
 
