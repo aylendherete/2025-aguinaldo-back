@@ -35,7 +35,9 @@ public class PaymentRegisterService {
         "CREDIT CARD",
         "DEBIT CARD",
         "ONLINE PAYMENT",
-        "INSURANCE"
+        "TRANSFER",
+        "BONUS",
+        "HEALTH INSURANCE"
     );
     private final PaymentRegisterRepository paymentRepo;
     private final TurnAssignedRepository turnRepo;
