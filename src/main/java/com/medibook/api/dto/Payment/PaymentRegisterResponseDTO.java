@@ -12,7 +12,7 @@ import lombok.Setter;
 public class PaymentRegisterResponseDTO {
     private UUID id;
     private UUID turnId;
-    private OffsetDateTime payedAt;
+    private OffsetDateTime paidAt;
     private String paymentStatus;
     private Double paymentAmount;
     private String method;

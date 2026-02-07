@@ -26,8 +26,8 @@ public class PaymentRegister {
     private UUID turnId;
 
     @CreationTimestamp
-    @Column(name = "last_update_status", nullable = false)
-    private Instant lastUpdateStatus;
+    @Column(name = "paid_at", nullable = false)
+    private Instant paidAt;
 
     @Column(name = "payment_status", nullable = false)
     private String paymentStatus;

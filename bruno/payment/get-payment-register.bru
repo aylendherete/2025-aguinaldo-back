@@ -29,7 +29,7 @@ tests {
   
   test("Payment register should include audit fields", function() {
     const body = res.getBody();
-    expect(body).to.have.property('payedAt');
+    expect(body).to.have.property('paidAt');
     expect(body).to.have.property('method');
   });
 }

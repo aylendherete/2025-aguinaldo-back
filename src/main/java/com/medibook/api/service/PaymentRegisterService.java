@@ -98,10 +98,10 @@ public class PaymentRegisterService {
             payment.setMethod(normalizeMethod(request.getMethod()));
         }
 
-        if (request.getPayedAt() != null) {
-            payment.setLastUpdateStatus(request.getPayedAt().toInstant());
+        if (request.getPaidAt() != null) {
+            payment.setPaidAt(request.getPaidAt().toInstant());
         } else {
-            payment.setLastUpdateStatus(Instant.now());
+            payment.setPaidAt(Instant.now());
         }
 
         if ("HEALTH INSURANCE".equals(targetStatus)) {
@@ -135,7 +135,7 @@ public class PaymentRegisterService {
         PaymentRegister payment = PaymentRegister.builder()
             .turnId(turnId)
             .paymentStatus("PENDING")
-            .lastUpdateStatus(Instant.now())
+            .paidAt(Instant.now())
             .build();
 
         PaymentRegister saved = paymentRepo.save(payment);

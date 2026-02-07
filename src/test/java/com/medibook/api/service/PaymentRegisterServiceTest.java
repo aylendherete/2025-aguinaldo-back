@@ -63,7 +63,7 @@ class PaymentRegisterServiceTest {
                 .id(UUID.randomUUID())
                 .turnId(turnId)
                 .paymentStatus("PENDING")
-                .lastUpdateStatus(Instant.now())
+                .paidAt(Instant.now())
                 .build();
 
         responseDTO = new PaymentRegisterResponseDTO();
@@ -79,7 +79,7 @@ class PaymentRegisterServiceTest {
         when(paymentRepo.save(any(PaymentRegister.class))).thenAnswer(invocation -> {
             PaymentRegister payment = invocation.getArgument(0);
             payment.setId(savedPayment.getId());
-            payment.setLastUpdateStatus(savedPayment.getLastUpdateStatus());
+            payment.setPaidAt(savedPayment.getPaidAt());
             return payment;
         });
         when(mapper.toDTO(any(PaymentRegister.class))).thenReturn(responseDTO);
@@ -98,7 +98,7 @@ class PaymentRegisterServiceTest {
         PaymentRegister capturedPayment = paymentCaptor.getValue();
         assertEquals(turnId, capturedPayment.getTurnId());
         assertEquals("PENDING", capturedPayment.getPaymentStatus());
-        assertNotNull(capturedPayment.getLastUpdateStatus());
+        assertNotNull(capturedPayment.getPaidAt());
 
         ArgumentCaptor<PaymentRegister> mapperCaptor = ArgumentCaptor.forClass(PaymentRegister.class);
         verify(mapper).toDTO(mapperCaptor.capture());
@@ -169,7 +169,7 @@ class PaymentRegisterServiceTest {
         requestDTO.setPaymentStatus("PAID");
         requestDTO.setPaymentAmount(150.0);
         requestDTO.setMethod("CREDIT CARD");
-        requestDTO.setPayedAt(OffsetDateTime.now());
+        requestDTO.setPaidAt(OffsetDateTime.now());
 
         when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
         when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.of(savedPayment));
@@ -190,7 +190,7 @@ class PaymentRegisterServiceTest {
         assertEquals("PAID", updated.getPaymentStatus());
         assertEquals(150.0, updated.getPaymentAmount());
         assertEquals("CREDIT CARD", updated.getMethod());
-        assertEquals(requestDTO.getPayedAt().toInstant(), updated.getLastUpdateStatus());
+        assertEquals(requestDTO.getPaidAt().toInstant(), updated.getPaidAt());
         assertSame(updated, turn.getPaymentRegister());
         assertNull(updated.getCopaymentAmount());
     }

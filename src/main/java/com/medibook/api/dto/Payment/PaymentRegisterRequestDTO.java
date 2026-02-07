@@ -1,6 +1,5 @@
 package com.medibook.api.dto.Payment;
 
-
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -11,7 +10,7 @@ import lombok.Setter;
 @Setter
 public class PaymentRegisterRequestDTO {
     private UUID turnId;
-    private OffsetDateTime payedAt;
+    private OffsetDateTime paidAt;
     private String paymentStatus;
     private Double paymentAmount;
     private String method;

@@ -19,9 +19,9 @@ public class PaymentRegisterMapper {
         dto.setPaymentAmount(payment.getPaymentAmount());
         dto.setCopaymentAmount(payment.getCopaymentAmount());
         dto.setMethod(payment.getMethod());
-        if (payment.getLastUpdateStatus() != null) {
-            OffsetDateTime payedAt = OffsetDateTime.ofInstant(payment.getLastUpdateStatus(), ZoneOffset.UTC);
-            dto.setPayedAt(payedAt);
+        if (payment.getPaidAt() != null) {
+            OffsetDateTime paidAt = OffsetDateTime.ofInstant(payment.getPaidAt(), ZoneOffset.UTC);
+            dto.setPaidAt(paidAt);
         }
         return dto;
     }

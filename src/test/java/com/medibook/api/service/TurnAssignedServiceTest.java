@@ -105,7 +105,7 @@ class TurnAssignedServiceTest {
                                                 .id(UUID.randomUUID())
                                                 .turnId(turnArg.getId())
                                                 .paymentStatus("PENDING")
-                                                .lastUpdateStatus(Instant.now())
+                                                .paidAt(Instant.now())
                                                 .build();
                                 turnArg.setPaymentRegister(paymentRegister);
                                 return paymentRegister;

@@ -98,7 +98,7 @@ class TurnAssignedMapperTest {
                 .paymentAmount(150.0)
                 .copaymentAmount(20.0)
                 .method("CREDIT_CARD")
-                .lastUpdateStatus(Instant.now())
+                .paidAt(Instant.now())
                 .build();
 
         turnAssigned.setPaymentRegister(paymentRegister);
@@ -112,7 +112,7 @@ class TurnAssignedMapperTest {
         assertEquals(paymentRegister.getPaymentAmount(), result.getPaymentRegister().getPaymentAmount());
         assertEquals(paymentRegister.getCopaymentAmount(), result.getPaymentRegister().getCopaymentAmount());
         assertEquals(paymentRegister.getMethod(), result.getPaymentRegister().getMethod());
-        assertNotNull(result.getPaymentRegister().getPayedAt());
+        assertNotNull(result.getPaymentRegister().getPaidAt());
     }
 
     private User createUser(UUID id, String email, Long dni, String role, String status, String name, String surname) {

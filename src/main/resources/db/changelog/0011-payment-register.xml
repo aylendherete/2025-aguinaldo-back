@@ -16,7 +16,7 @@
             <column name="turn_id" type="uuid">
                 <constraints nullable="false" unique="true"/>
             </column>
-            <column name="last_update_status" type="timestamptz" defaultValueComputed="now()">
+            <column name="paid_at" type="timestamptz" defaultValueComputed="now()">
                 <constraints />
             </column>
             <column name="payment_status" type="text" defaultValue="PENDING">
