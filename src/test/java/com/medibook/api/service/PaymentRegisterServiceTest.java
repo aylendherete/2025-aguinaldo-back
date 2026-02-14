@@ -573,6 +573,21 @@ class PaymentRegisterServiceTest {
     }
 
     @Test
+    void updatePaymentRegister_withCanceledStatus_whenTurnNotCompleted_throwsException() {
+        PaymentRegisterRequestDTO requestDTO = new PaymentRegisterRequestDTO();
+        requestDTO.setPaymentStatus("CANCELED");
+        turn.setStatus("SCHEDULED");
+
+        when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                paymentRegisterService.updatePaymentRegister(turnId, requestDTO, doctor.getId(), doctor.getRole()));
+
+        assertEquals("Payment register can only be updated for completed turns", exception.getMessage());
+        verify(paymentRepo, never()).save(any());
+    }
+
+    @Test
     void cancelPaymentRegister_asDoctor_setsCanceledAndKeepsFinancialFields() {
         savedPayment.setPaymentStatus("PAID");
         savedPayment.setPaymentAmount(200.0);
@@ -615,6 +630,19 @@ class PaymentRegisterServiceTest {
                 paymentRegisterService.cancelPaymentRegister(turnId, doctor.getId(), doctor.getRole()));
 
         assertEquals("Payment with status PENDING cannot be canceled", exception.getMessage());
+        verify(paymentRepo, never()).save(any());
+    }
+
+    @Test
+    void cancelPaymentRegister_whenTurnNotCompleted_throwsException() {
+        turn.setStatus("SCHEDULED");
+
+        when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                paymentRegisterService.cancelPaymentRegister(turnId, doctor.getId(), doctor.getRole()));
+
+        assertEquals("Payment register can only be canceled for completed turns", exception.getMessage());
         verify(paymentRepo, never()).save(any());
     }
 
