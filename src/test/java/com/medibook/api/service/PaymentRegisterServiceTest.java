@@ -55,7 +55,7 @@ class PaymentRegisterServiceTest {
 
         turn = TurnAssigned.builder()
                 .id(turnId)
-                .status("SCHEDULED")
+            .status("COMPLETED")
                 .doctor(doctor)
                 .build();
 
@@ -264,8 +264,126 @@ class PaymentRegisterServiceTest {
         verify(paymentRepo).save(captor.capture());
         PaymentRegister updated = captor.getValue();
         assertEquals("HEALTH INSURANCE", updated.getPaymentStatus());
+        assertEquals("HEALTH INSURANCE", updated.getMethod());
         assertEquals(45.0, updated.getCopaymentAmount());
         assertSame(updated, turn.getPaymentRegister());
+    }
+
+    @Test
+    void updatePaymentRegister_healthInsuranceWithDifferentMethod_throwsException() {
+        PaymentRegisterRequestDTO requestDTO = new PaymentRegisterRequestDTO();
+        requestDTO.setPaymentStatus("HEALTH INSURANCE");
+        requestDTO.setMethod("CASH");
+
+        when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
+        when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.of(savedPayment));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                paymentRegisterService.updatePaymentRegister(turnId, requestDTO, doctor.getId(), doctor.getRole()));
+
+        assertEquals("Payment method must be HEALTH INSURANCE when payment status is HEALTH INSURANCE", exception.getMessage());
+        verify(paymentRepo, never()).save(any());
+    }
+
+    @Test
+    void updatePaymentRegister_bonusWithDifferentMethod_throwsException() {
+        PaymentRegisterRequestDTO requestDTO = new PaymentRegisterRequestDTO();
+        requestDTO.setPaymentStatus("BONUS");
+        requestDTO.setMethod("TRANSFER");
+
+        when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
+        when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.of(savedPayment));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                paymentRegisterService.updatePaymentRegister(turnId, requestDTO, doctor.getId(), doctor.getRole()));
+
+        assertEquals("Payment method must be BONUS when payment status is BONUS", exception.getMessage());
+        verify(paymentRepo, never()).save(any());
+    }
+
+    @Test
+    void updatePaymentRegister_methodHealthInsuranceWithPaidStatus_throwsException() {
+        PaymentRegisterRequestDTO requestDTO = new PaymentRegisterRequestDTO();
+        requestDTO.setPaymentStatus("PAID");
+        requestDTO.setMethod("HEALTH INSURANCE");
+
+        when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
+        when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.of(savedPayment));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                paymentRegisterService.updatePaymentRegister(turnId, requestDTO, doctor.getId(), doctor.getRole()));
+
+        assertEquals("Payment status must be HEALTH INSURANCE when payment method is HEALTH INSURANCE", exception.getMessage());
+        verify(paymentRepo, never()).save(any());
+    }
+
+    @Test
+    void updatePaymentRegister_methodBonusWithPaidStatus_throwsException() {
+        PaymentRegisterRequestDTO requestDTO = new PaymentRegisterRequestDTO();
+        requestDTO.setPaymentStatus("PAID");
+        requestDTO.setMethod("BONUS");
+
+        when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
+        when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.of(savedPayment));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                paymentRegisterService.updatePaymentRegister(turnId, requestDTO, doctor.getId(), doctor.getRole()));
+
+        assertEquals("Payment status must be BONUS when payment method is BONUS", exception.getMessage());
+        verify(paymentRepo, never()).save(any());
+    }
+
+    @Test
+    void updatePaymentRegister_bonusStatusWithoutMethod_setsBonusMethod() {
+        PaymentRegisterRequestDTO requestDTO = new PaymentRegisterRequestDTO();
+        requestDTO.setPaymentStatus("BONUS");
+        requestDTO.setPaymentAmount(120.0);
+
+        when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
+        when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.of(savedPayment));
+        when(paymentRepo.save(any(PaymentRegister.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(mapper.toDTO(any(PaymentRegister.class))).thenReturn(responseDTO);
+
+        PaymentRegisterResponseDTO result = paymentRegisterService.updatePaymentRegister(
+                turnId,
+                requestDTO,
+                doctor.getId(),
+                doctor.getRole());
+
+        assertNotNull(result);
+
+        ArgumentCaptor<PaymentRegister> captor = ArgumentCaptor.forClass(PaymentRegister.class);
+        verify(paymentRepo).save(captor.capture());
+        PaymentRegister updated = captor.getValue();
+        assertEquals("BONUS", updated.getPaymentStatus());
+        assertEquals("BONUS", updated.getMethod());
+    }
+
+    @Test
+    void updatePaymentRegister_healthInsuranceStatusWithoutMethod_setsHealthInsuranceMethod() {
+        PaymentRegisterRequestDTO requestDTO = new PaymentRegisterRequestDTO();
+        requestDTO.setPaymentStatus("HEALTH INSURANCE");
+        requestDTO.setPaymentAmount(250.0);
+        requestDTO.setCopaymentAmount(40.0);
+
+        when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
+        when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.of(savedPayment));
+        when(paymentRepo.save(any(PaymentRegister.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(mapper.toDTO(any(PaymentRegister.class))).thenReturn(responseDTO);
+
+        PaymentRegisterResponseDTO result = paymentRegisterService.updatePaymentRegister(
+                turnId,
+                requestDTO,
+                doctor.getId(),
+                doctor.getRole());
+
+        assertNotNull(result);
+
+        ArgumentCaptor<PaymentRegister> captor = ArgumentCaptor.forClass(PaymentRegister.class);
+        verify(paymentRepo).save(captor.capture());
+        PaymentRegister updated = captor.getValue();
+        assertEquals("HEALTH INSURANCE", updated.getPaymentStatus());
+        assertEquals("HEALTH INSURANCE", updated.getMethod());
     }
 
     @Test

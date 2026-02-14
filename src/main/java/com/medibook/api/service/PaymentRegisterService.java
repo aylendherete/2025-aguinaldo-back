@@ -83,6 +83,10 @@ public class PaymentRegisterService {
             throw new RuntimeException("You are not allowed to update this payment register");
         }
 
+        if (turn.getStatus() == null || !"COMPLETED".equals(turn.getStatus())) {
+            throw new RuntimeException("Payment register can only be updated for completed turns");
+        }
+        
         PaymentRegister payment = paymentRepo.findByTurnId(turnId)
             .orElseThrow(() -> new RuntimeException("Payment register not found for this turn"));
 
@@ -94,15 +98,41 @@ public class PaymentRegisterService {
         if (request.getPaymentAmount() != null) {
             payment.setPaymentAmount(request.getPaymentAmount());
         }
+        String targetMethod = payment.getMethod();
         if (request.getMethod() != null) {
-            payment.setMethod(normalizeMethod(request.getMethod()));
+            targetMethod = normalizeMethod(request.getMethod());
         }
+
+        if ("HEALTH INSURANCE".equals(targetStatus)) {
+            if (request.getMethod() != null && !"HEALTH INSURANCE".equals(targetMethod)) {
+                throw new RuntimeException("Payment method must be HEALTH INSURANCE when payment status is HEALTH INSURANCE");
+            }
+            targetMethod = "HEALTH INSURANCE";
+        }
+
+        if ("BONUS".equals(targetStatus)) {
+            if (request.getMethod() != null && !"BONUS".equals(targetMethod)) {
+                throw new RuntimeException("Payment method must be BONUS when payment status is BONUS");
+            }
+            targetMethod = "BONUS";
+        }
+
+        if ("HEALTH INSURANCE".equals(targetMethod) && !"HEALTH INSURANCE".equals(targetStatus)) {
+            throw new RuntimeException("Payment status must be HEALTH INSURANCE when payment method is HEALTH INSURANCE");
+        }
+
+        if ("BONUS".equals(targetMethod) && !"BONUS".equals(targetStatus)) {
+            throw new RuntimeException("Payment status must be BONUS when payment method is BONUS");
+        }
+
+        payment.setMethod(targetMethod);
 
         if (request.getPaidAt() != null) {
             payment.setPaidAt(request.getPaidAt().toInstant());
         } else {
             payment.setPaidAt(Instant.now());
         }
+        
 
         if ("HEALTH INSURANCE".equals(targetStatus)) {
             if (request.getCopaymentAmount() != null) {

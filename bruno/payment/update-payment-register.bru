@@ -18,7 +18,7 @@ body:json{    {
       "paymentStatus": "HEALTH INSURANCE",
       "paymentAmount": 180.5,
       "copaymentAmount": 30.0,
-      "method": "CREDIT CARD",
+  "method": "HEALTH INSURANCE",
       "paidAt": "2025-12-01T10:00:00Z"
     }
 
@@ -27,13 +27,23 @@ body:json{    {
 assert {
   res.status: eq 200
   res.body.paymentStatus: eq "HEALTH INSURANCE"
-  res.body.turnId: eq {{turnId}}
+  res.body.turnId: isDefined
 }
 
 tests {
   test("Doctor should update payment register", function() {
+    const body = res.getBody();
+    const expectedTurnId = bru.getEnvVar("turnId");
+
     expect(res.getStatus()).to.equal(200);
-    expect(res.getBody().paymentStatus).to.equal("HEALTH INSURANCE");
+    expect(body.paymentStatus).to.equal("HEALTH INSURANCE");
+    expect(body.method).to.equal("HEALTH INSURANCE");
+
+    if (expectedTurnId) {
+      expect(body.turnId).to.equal(expectedTurnId);
+    } else {
+      expect(body.turnId).to.match(/^[0-9a-fA-F-]{36}$/);
+    }
   });
 
   test("Payment register should capture payment amounts", function() {

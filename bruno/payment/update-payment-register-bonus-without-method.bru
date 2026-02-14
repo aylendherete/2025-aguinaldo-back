@@ -1,0 +1,37 @@
+meta {
+  name: Update Payment Register Bonus Without Method
+  type: http
+  seq: 15
+}
+
+put {
+  url: {{baseUrl}}/api/payments/turn/{{turnId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{doctorAccessToken}}
+}
+
+body:json{
+  {
+    "paymentStatus": "BONUS",
+    "paymentAmount": 75
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.paymentStatus: eq "BONUS"
+  res.body.method: eq "BONUS"
+}
+
+tests {
+  test("Should auto-set BONUS method when status is BONUS", function() {
+    const body = res.getBody();
+    expect(res.getStatus()).to.equal(200);
+    expect(body.paymentStatus).to.equal("BONUS");
+    expect(body.method).to.equal("BONUS");
+  });
+}
