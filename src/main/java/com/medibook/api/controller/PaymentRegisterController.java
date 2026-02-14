@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -107,6 +108,54 @@ public class PaymentRegisterController {
         } catch (RuntimeException ex) {
             String message = ex.getMessage() != null ? ex.getMessage() : "Unable to update payment register";
             log.warn("Failed to update payment register for turn {}: {}", turnId, message);
+
+            String lowerMessage = message.toLowerCase(Locale.ROOT);
+            if (lowerMessage.contains("not found")) {
+                var error = ErrorResponseUtil.createNotFoundResponse(message, request.getRequestURI());
+                return new ResponseEntity<>(error.getBody(), error.getStatusCode());
+            }
+            if (lowerMessage.contains("not allowed")) {
+                return AuthorizationUtil.createOwnershipAccessDeniedResponse(message);
+            }
+            var error = ErrorResponseUtil.createBadRequestResponse(message, request.getRequestURI());
+            return new ResponseEntity<>(error.getBody(), error.getStatusCode());
+        }
+    }
+
+    @PatchMapping("/turn/{turnId}/cancel")
+    public ResponseEntity<?> cancelPaymentRegister(
+            @PathVariable UUID turnId,
+            HttpServletRequest request) {
+
+        User authenticatedUser = (User) request.getAttribute("authenticatedUser");
+
+        if (authenticatedUser == null) {
+            log.warn("Payment cancel rejected for turn {} due to missing authentication", turnId);
+            var error = ErrorResponseUtil.createErrorResponse(
+                    "UNAUTHORIZED",
+                    "Authentication is required",
+                    HttpStatus.UNAUTHORIZED,
+                    request.getRequestURI());
+            return new ResponseEntity<>(error.getBody(), error.getStatusCode());
+        }
+
+        boolean isAdmin = AuthorizationUtil.isAdmin(authenticatedUser);
+        boolean isDoctor = AuthorizationUtil.isDoctor(authenticatedUser);
+
+        if (!isAdmin && !isDoctor) {
+            log.warn("User {} attempted to cancel payment for turn {} without doctor/admin role", authenticatedUser.getId(), turnId);
+            return AuthorizationUtil.createDoctorAccessDeniedResponse(request.getRequestURI());
+        }
+
+        try {
+            PaymentRegisterResponseDTO response = paymentRegisterService.cancelPaymentRegister(
+                    turnId,
+                    authenticatedUser.getId(),
+                    authenticatedUser.getRole());
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException ex) {
+            String message = ex.getMessage() != null ? ex.getMessage() : "Unable to cancel payment register";
+            log.warn("Failed to cancel payment register for turn {}: {}", turnId, message);
 
             String lowerMessage = message.toLowerCase(Locale.ROOT);
             if (lowerMessage.contains("not found")) {

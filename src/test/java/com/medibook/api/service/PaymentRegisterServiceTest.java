@@ -438,4 +438,132 @@ class PaymentRegisterServiceTest {
         assertEquals("Invalid payment method", exception.getMessage());
         verify(paymentRepo, never()).save(any());
     }
+
+    @Test
+    void updatePaymentRegister_withCanceledStatus_whenCurrentStatusNotPending_cancelsPayment() {
+        PaymentRegisterRequestDTO requestDTO = new PaymentRegisterRequestDTO();
+        requestDTO.setPaymentStatus("CANCELED");
+        savedPayment.setPaymentStatus("PAID");
+        savedPayment.setPaymentAmount(100.0);
+        savedPayment.setMethod("CASH");
+        savedPayment.setCopaymentAmount(20.0);
+        Instant originalPaidAt = Instant.parse("2025-01-01T10:00:00Z");
+        savedPayment.setPaidAt(originalPaidAt);
+
+        when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
+        when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.of(savedPayment));
+        when(paymentRepo.save(any(PaymentRegister.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(mapper.toDTO(any(PaymentRegister.class))).thenReturn(responseDTO);
+
+        PaymentRegisterResponseDTO result = paymentRegisterService.updatePaymentRegister(
+                turnId,
+                requestDTO,
+                doctor.getId(),
+                doctor.getRole());
+
+        assertNotNull(result);
+
+        ArgumentCaptor<PaymentRegister> captor = ArgumentCaptor.forClass(PaymentRegister.class);
+        verify(paymentRepo).save(captor.capture());
+        PaymentRegister updated = captor.getValue();
+        assertEquals("CANCELED", updated.getPaymentStatus());
+        assertEquals(100.0, updated.getPaymentAmount());
+        assertEquals("CASH", updated.getMethod());
+        assertEquals(20.0, updated.getCopaymentAmount());
+        assertEquals(originalPaidAt, updated.getPaidAt());
+    }
+
+    @Test
+    void updatePaymentRegister_withCanceledStatusAndExtraFields_throwsException() {
+        PaymentRegisterRequestDTO requestDTO = new PaymentRegisterRequestDTO();
+        requestDTO.setPaymentStatus("CANCELED");
+        requestDTO.setMethod("CASH");
+
+        when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
+        when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.of(savedPayment));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                paymentRegisterService.updatePaymentRegister(turnId, requestDTO, doctor.getId(), doctor.getRole()));
+
+        assertEquals("When payment status is CANCELED, method/copayment/amount/paidAt cannot be sent", exception.getMessage());
+        verify(paymentRepo, never()).save(any());
+    }
+
+    @Test
+    void updatePaymentRegister_withCanceledStatus_whenCurrentIsPending_throwsException() {
+        PaymentRegisterRequestDTO requestDTO = new PaymentRegisterRequestDTO();
+        requestDTO.setPaymentStatus("CANCELED");
+        savedPayment.setPaymentStatus("PENDING");
+
+        when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
+        when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.of(savedPayment));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                paymentRegisterService.updatePaymentRegister(turnId, requestDTO, doctor.getId(), doctor.getRole()));
+
+        assertEquals("Payment with status PENDING cannot be canceled", exception.getMessage());
+        verify(paymentRepo, never()).save(any());
+    }
+
+    @Test
+    void cancelPaymentRegister_asDoctor_setsCanceledAndKeepsFinancialFields() {
+        savedPayment.setPaymentStatus("PAID");
+        savedPayment.setPaymentAmount(200.0);
+        savedPayment.setMethod("CASH");
+        savedPayment.setCopaymentAmount(30.0);
+        Instant originalPaidAt = Instant.parse("2025-01-02T11:00:00Z");
+        savedPayment.setPaidAt(originalPaidAt);
+
+        when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
+        when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.of(savedPayment));
+        when(paymentRepo.save(any(PaymentRegister.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(mapper.toDTO(any(PaymentRegister.class))).thenReturn(responseDTO);
+
+        PaymentRegisterResponseDTO result = paymentRegisterService.cancelPaymentRegister(
+                turnId,
+                doctor.getId(),
+                doctor.getRole());
+
+        assertNotNull(result);
+
+        ArgumentCaptor<PaymentRegister> captor = ArgumentCaptor.forClass(PaymentRegister.class);
+        verify(paymentRepo).save(captor.capture());
+        PaymentRegister updated = captor.getValue();
+        assertEquals("CANCELED", updated.getPaymentStatus());
+        assertEquals(200.0, updated.getPaymentAmount());
+        assertEquals("CASH", updated.getMethod());
+        assertEquals(30.0, updated.getCopaymentAmount());
+        assertEquals(originalPaidAt, updated.getPaidAt());
+        assertSame(updated, turn.getPaymentRegister());
+    }
+
+    @Test
+    void cancelPaymentRegister_whenCurrentStatusPending_throwsException() {
+        savedPayment.setPaymentStatus("PENDING");
+
+        when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
+        when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.of(savedPayment));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                paymentRegisterService.cancelPaymentRegister(turnId, doctor.getId(), doctor.getRole()));
+
+        assertEquals("Payment with status PENDING cannot be canceled", exception.getMessage());
+        verify(paymentRepo, never()).save(any());
+    }
+
+    @Test
+    void cancelPaymentRegister_whenDoctorNotOwner_throwsException() {
+        User anotherDoctor = new User();
+        anotherDoctor.setId(UUID.randomUUID());
+        anotherDoctor.setRole("DOCTOR");
+        turn.setDoctor(anotherDoctor);
+
+        when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                paymentRegisterService.cancelPaymentRegister(turnId, doctor.getId(), doctor.getRole()));
+
+        assertEquals("You are not allowed to cancel this payment register", exception.getMessage());
+        verify(paymentRepo, never()).save(any());
+    }
 }

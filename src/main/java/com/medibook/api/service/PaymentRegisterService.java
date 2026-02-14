@@ -21,13 +21,13 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Transactional
 public class PaymentRegisterService {
-
    
     private static final java.util.Set<String> VALID_STATUSES = java.util.Set.of(
         "PENDING",
         "PAID",
         "HEALTH INSURANCE",
-        "BONUS"
+        "BONUS",
+        "CANCELED"
     );
 
     private static final java.util.Set<String> VALID_METHODS = java.util.Set.of(
@@ -90,9 +90,24 @@ public class PaymentRegisterService {
         PaymentRegister payment = paymentRepo.findByTurnId(turnId)
             .orElseThrow(() -> new RuntimeException("Payment register not found for this turn"));
 
+        String requestedStatus = null;
+        if (request.getPaymentStatus() != null) {
+            requestedStatus = normalizeStatus(request.getPaymentStatus());
+            if ("CANCELED".equals(requestedStatus)) {
+                validateCancelRequestWithoutExtraFields(request);
+                validateCancelableStatus(payment.getPaymentStatus());
+
+                payment.setPaymentStatus("CANCELED");
+                PaymentRegister saved = paymentRepo.save(payment);
+                turn.setPaymentRegister(saved);
+
+                return mapper.toDTO(saved);
+            }
+        }
+
         String targetStatus = payment.getPaymentStatus();
         if (request.getPaymentStatus() != null) {
-            targetStatus = normalizeStatus(request.getPaymentStatus());
+            targetStatus = requestedStatus;
             payment.setPaymentStatus(targetStatus);
         }
         if (request.getPaymentAmount() != null) {
@@ -144,6 +159,40 @@ public class PaymentRegisterService {
             }
             payment.setCopaymentAmount(null);
         }
+
+        PaymentRegister saved = paymentRepo.save(payment);
+        turn.setPaymentRegister(saved);
+
+        return mapper.toDTO(saved);
+    }
+
+    public PaymentRegisterResponseDTO cancelPaymentRegister(UUID turnId,
+            UUID actorId,
+            String actorRole) {
+
+        TurnAssigned turn = turnRepo.findById(turnId)
+            .orElseThrow(() -> new RuntimeException("Turn not found"));
+
+        boolean isAdmin = "ADMIN".equals(actorRole);
+        boolean isDoctorOwner = "DOCTOR".equals(actorRole)
+            && turn.getDoctor() != null
+            && actorId != null
+            && actorId.equals(turn.getDoctor().getId());
+
+        if (!isAdmin && !isDoctorOwner) {
+            throw new RuntimeException("You are not allowed to cancel this payment register");
+        }
+
+        if (turn.getStatus() == null || !"COMPLETED".equals(turn.getStatus())) {
+            throw new RuntimeException("Payment register can only be canceled for completed turns");
+        }
+
+        PaymentRegister payment = paymentRepo.findByTurnId(turnId)
+            .orElseThrow(() -> new RuntimeException("Payment register not found for this turn"));
+
+        validateCancelableStatus(payment.getPaymentStatus());
+
+        payment.setPaymentStatus("CANCELED");
 
         PaymentRegister saved = paymentRepo.save(payment);
         turn.setPaymentRegister(saved);
@@ -209,5 +258,20 @@ public class PaymentRegisterService {
         }
 
         return upperCaseMethod;
+    }
+
+    private void validateCancelableStatus(String currentStatus) {
+        if (currentStatus == null || "PENDING".equals(currentStatus)) {
+            throw new RuntimeException("Payment with status PENDING cannot be canceled");
+        }
+    }
+
+    private void validateCancelRequestWithoutExtraFields(PaymentRegisterRequestDTO request) {
+        if (request.getMethod() != null
+                || request.getCopaymentAmount() != null
+                || request.getPaymentAmount() != null
+                || request.getPaidAt() != null) {
+            throw new RuntimeException("When payment status is CANCELED, method/copayment/amount/paidAt cannot be sent");
+        }
     }
 }
