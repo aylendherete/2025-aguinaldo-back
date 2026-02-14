@@ -416,8 +416,36 @@ class PaymentRegisterServiceTest {
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
                 paymentRegisterService.updatePaymentRegister(turnId, requestDTO, doctor.getId(), doctor.getRole()));
 
-        assertEquals("Copayment amount must be less than payment amount", exception.getMessage());
+        assertEquals("Copayment amount must be less than or equal to payment amount", exception.getMessage());
         verify(paymentRepo, never()).save(any());
+    }
+
+    @Test
+    void updatePaymentRegister_healthInsuranceCopaymentEqualsAmount_isValid() {
+        PaymentRegisterRequestDTO requestDTO = new PaymentRegisterRequestDTO();
+        requestDTO.setPaymentStatus("HEALTH INSURANCE");
+        requestDTO.setPaymentAmount(100.0);
+        requestDTO.setCopaymentAmount(100.0);
+
+        when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
+        when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.of(savedPayment));
+        when(paymentRepo.save(any(PaymentRegister.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(mapper.toDTO(any(PaymentRegister.class))).thenReturn(responseDTO);
+
+        PaymentRegisterResponseDTO result = paymentRegisterService.updatePaymentRegister(
+                turnId,
+                requestDTO,
+                doctor.getId(),
+                doctor.getRole());
+
+        assertNotNull(result);
+
+        ArgumentCaptor<PaymentRegister> captor = ArgumentCaptor.forClass(PaymentRegister.class);
+        verify(paymentRepo).save(captor.capture());
+        PaymentRegister updated = captor.getValue();
+        assertEquals(100.0, updated.getPaymentAmount());
+        assertEquals(100.0, updated.getCopaymentAmount());
+        assertEquals("HEALTH INSURANCE", updated.getPaymentStatus());
     }
 
     @Test
@@ -436,7 +464,7 @@ class PaymentRegisterServiceTest {
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
                 paymentRegisterService.updatePaymentRegister(turnId, requestDTO, doctor.getId(), doctor.getRole()));
 
-        assertEquals("Copayment amount must be less than payment amount", exception.getMessage());
+        assertEquals("Copayment amount must be less than or equal to payment amount", exception.getMessage());
         verify(paymentRepo, never()).save(any());
     }
 

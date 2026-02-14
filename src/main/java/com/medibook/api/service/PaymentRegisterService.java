@@ -157,7 +157,7 @@ public class PaymentRegisterService {
                     ? request.getCopaymentAmount()
                     : payment.getCopaymentAmount();
 
-            validateCopaymentLessThanAmount(targetPaymentAmount, targetCopaymentAmount);
+            validateCopaymentNotGreaterThanAmount(targetPaymentAmount, targetCopaymentAmount);
 
             if (request.getCopaymentAmount() != null) {
                 payment.setCopaymentAmount(request.getCopaymentAmount());
@@ -284,7 +284,7 @@ public class PaymentRegisterService {
         }
     }
 
-    private void validateCopaymentLessThanAmount(Double paymentAmount, Double copaymentAmount) {
+    private void validateCopaymentNotGreaterThanAmount(Double paymentAmount, Double copaymentAmount) {
         if (copaymentAmount == null) {
             return;
         }
@@ -293,8 +293,8 @@ public class PaymentRegisterService {
             throw new RuntimeException("Payment amount is required when copayment amount is set");
         }
 
-        if (copaymentAmount >= paymentAmount) {
-            throw new RuntimeException("Copayment amount must be less than payment amount");
+        if (copaymentAmount > paymentAmount) {
+            throw new RuntimeException("Copayment amount must be less than or equal to payment amount");
         }
     }
 }
