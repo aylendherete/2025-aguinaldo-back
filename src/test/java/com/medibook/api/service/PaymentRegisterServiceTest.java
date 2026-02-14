@@ -245,6 +245,7 @@ class PaymentRegisterServiceTest {
     void updatePaymentRegister_healthInsuranceAllowsCopayment() {
         PaymentRegisterRequestDTO requestDTO = new PaymentRegisterRequestDTO();
         requestDTO.setPaymentStatus("health insurance");
+        requestDTO.setPaymentAmount(120.0);
         requestDTO.setCopaymentAmount(45.0);
 
         when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
@@ -265,6 +266,7 @@ class PaymentRegisterServiceTest {
         PaymentRegister updated = captor.getValue();
         assertEquals("HEALTH INSURANCE", updated.getPaymentStatus());
         assertEquals("HEALTH INSURANCE", updated.getMethod());
+        assertEquals(120.0, updated.getPaymentAmount());
         assertEquals(45.0, updated.getCopaymentAmount());
         assertSame(updated, turn.getPaymentRegister());
     }
@@ -398,6 +400,43 @@ class PaymentRegisterServiceTest {
                 paymentRegisterService.updatePaymentRegister(turnId, requestDTO, doctor.getId(), doctor.getRole()));
 
         assertEquals("Copayment amount can only be set when payment status is HEALTH INSURANCE", exception.getMessage());
+        verify(paymentRepo, never()).save(any());
+    }
+
+    @Test
+    void updatePaymentRegister_healthInsuranceCopaymentGreaterThanAmount_throwsException() {
+        PaymentRegisterRequestDTO requestDTO = new PaymentRegisterRequestDTO();
+        requestDTO.setPaymentStatus("HEALTH INSURANCE");
+        requestDTO.setPaymentAmount(100.0);
+        requestDTO.setCopaymentAmount(120.0);
+
+        when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
+        when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.of(savedPayment));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                paymentRegisterService.updatePaymentRegister(turnId, requestDTO, doctor.getId(), doctor.getRole()));
+
+        assertEquals("Copayment amount must be less than payment amount", exception.getMessage());
+        verify(paymentRepo, never()).save(any());
+    }
+
+    @Test
+    void updatePaymentRegister_healthInsuranceLoweringAmountBelowExistingCopayment_throwsException() {
+        savedPayment.setPaymentStatus("HEALTH INSURANCE");
+        savedPayment.setPaymentAmount(200.0);
+        savedPayment.setCopaymentAmount(80.0);
+        savedPayment.setMethod("HEALTH INSURANCE");
+
+        PaymentRegisterRequestDTO requestDTO = new PaymentRegisterRequestDTO();
+        requestDTO.setPaymentAmount(70.0);
+
+        when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
+        when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.of(savedPayment));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                paymentRegisterService.updatePaymentRegister(turnId, requestDTO, doctor.getId(), doctor.getRole()));
+
+        assertEquals("Copayment amount must be less than payment amount", exception.getMessage());
         verify(paymentRepo, never()).save(any());
     }
 

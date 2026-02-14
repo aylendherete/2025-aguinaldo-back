@@ -150,6 +150,15 @@ public class PaymentRegisterService {
         
 
         if ("HEALTH INSURANCE".equals(targetStatus)) {
+            Double targetPaymentAmount = request.getPaymentAmount() != null
+                    ? request.getPaymentAmount()
+                    : payment.getPaymentAmount();
+            Double targetCopaymentAmount = request.getCopaymentAmount() != null
+                    ? request.getCopaymentAmount()
+                    : payment.getCopaymentAmount();
+
+            validateCopaymentLessThanAmount(targetPaymentAmount, targetCopaymentAmount);
+
             if (request.getCopaymentAmount() != null) {
                 payment.setCopaymentAmount(request.getCopaymentAmount());
             }
@@ -272,6 +281,20 @@ public class PaymentRegisterService {
                 || request.getPaymentAmount() != null
                 || request.getPaidAt() != null) {
             throw new RuntimeException("When payment status is CANCELED, method/copayment/amount/paidAt cannot be sent");
+        }
+    }
+
+    private void validateCopaymentLessThanAmount(Double paymentAmount, Double copaymentAmount) {
+        if (copaymentAmount == null) {
+            return;
+        }
+
+        if (paymentAmount == null) {
+            throw new RuntimeException("Payment amount is required when copayment amount is set");
+        }
+
+        if (copaymentAmount >= paymentAmount) {
+            throw new RuntimeException("Copayment amount must be less than payment amount");
         }
     }
 }

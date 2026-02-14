@@ -1,0 +1,36 @@
+meta {
+  name: Update Payment Register Health Insurance Copayment Greater Than Amount
+  type: http
+  seq: 23
+}
+
+put {
+  url: {{baseUrl}}/api/payments/turn/{{turnId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{doctorAccessToken}}
+}
+
+body:json{
+  {
+    "paymentStatus": "HEALTH INSURANCE",
+    "method": "HEALTH INSURANCE",
+    "paymentAmount": 100,
+    "copaymentAmount": 120
+  }
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("Should reject copayment greater than payment amount", function() {
+    const body = res.getBody();
+    expect(res.getStatus()).to.equal(400);
+    expect(body.message || body.error).to.include("Copayment amount must be less than payment amount");
+  });
+}
