@@ -1,0 +1,36 @@
+meta {
+  name: Create Turn - Doctor Forbidden
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/turns
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{doctorAccessToken}}
+}
+
+body:json {
+  {
+    "doctorId": "{{doctorId}}",
+    "patientId": "{{patientId}}",
+    "scheduledAt": "{{scheduledAt}}"
+  }
+}
+
+assert {
+  res.status: eq 403
+  res.body.error: eq "Forbidden"
+  res.body.message: eq "Only patients can create turns"
+}
+
+tests {
+  test("Should reject doctor when creating turn", function() {
+    expect(res.getStatus()).to.equal(403);
+    expect(res.getBody().message).to.equal("Only patients can create turns");
+  });
+}
