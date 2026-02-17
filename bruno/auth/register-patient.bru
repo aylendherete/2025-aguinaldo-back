@@ -19,7 +19,9 @@ body:json {
     "surname": "Doe",
     "phone": "+1234567890",
     "birthdate": "1990-01-01",
-    "gender": "MALE"
+    "gender": "MALE",
+    "healthInsurance": "OSDE",
+    "healthPlan": "210"
   }
 }
 
@@ -29,11 +31,15 @@ assert {
   res.body.user: isDefined
   res.body.user.email: eq "patient@example.com"
   res.body.user.role: eq "PATIENT"
+  res.body.user.healthInsurance: eq "OSDE"
+  res.body.user.healthPlan: eq "210"
 }
 
 tests {
   test("Should register a patient successfully", function() {
     expect(res.getStatus()).to.equal(201);
     expect(res.getBody().user.role).to.equal("PATIENT");
+    expect(res.getBody().user.healthInsurance).to.equal("OSDE");
+    expect(res.getBody().user.healthPlan).to.equal("210");
   });
 }

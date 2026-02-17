@@ -1,0 +1,35 @@
+meta {
+  name: Update Payment Register Copayment Without Health Insurance
+  type: http
+  seq: 17
+}
+
+put {
+  url: {{baseUrl}}/api/payments/turn/{{turnId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{doctorAccessToken}}
+}
+
+body:json{
+  {
+    "paymentStatus": "PAID",
+    "method": "CASH",
+    "paymentAmount": 100,
+    "copaymentAmount": 10
+  }
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("Should reject copayment when status is not HEALTH INSURANCE", function() {
+    expect(res.getStatus()).to.equal(400);
+    expect(res.getBody().message || res.getBody().error).to.include("Copayment amount can only be set");
+  });
+}

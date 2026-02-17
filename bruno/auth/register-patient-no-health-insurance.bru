@@ -1,0 +1,43 @@
+meta {
+  name: Register Patient Without Health Insurance
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/auth/register/patient
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "patient.noinsurance@example.com",
+    "dni": 2233445,
+    "password": "password123",
+    "name": "Ana",
+    "surname": "Gomez",
+    "phone": "+1234567899",
+    "birthdate": "1992-05-20",
+    "gender": "FEMALE"
+  }
+}
+
+assert {
+  res.status: eq 201
+  res.body.user: isDefined
+  res.body.user.email: eq "patient.noinsurance@example.com"
+  res.body.user.role: eq "PATIENT"
+  res.body.user.healthInsurance: isNull
+  res.body.user.healthPlan: isNull
+}
+
+tests {
+  test("Should register patient without coverage", function() {
+    expect(res.getStatus()).to.equal(201);
+    const user = res.getBody().user;
+    expect(user.role).to.equal("PATIENT");
+    expect(user.healthInsurance).to.be.null;
+    expect(user.healthPlan).to.be.null;
+  });
+}

@@ -60,6 +60,9 @@ public class User {
     @Column(name = "score")
     private Double score;
 
+    private String healthInsurance;
+    private String healthPlan;
+
     @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<MedicalHistory> medicalHistories = new ArrayList<>();
 

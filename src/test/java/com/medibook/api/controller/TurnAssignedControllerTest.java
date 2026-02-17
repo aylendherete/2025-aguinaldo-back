@@ -41,16 +41,22 @@ class TurnAssignedControllerTest {
 
     private String patientToken;
     private String doctorToken;
+    private String adminToken;
     private User patient;
+    private User otherPatient;
     private User doctor;
+    private User admin;
 
     @BeforeEach
     void setUp() throws Exception {
         patient = createTestPatient();
+        otherPatient = createAnotherTestPatient();
         doctor = createTestDoctor();
+        admin = createTestAdmin();
 
         patientToken = getAuthToken(patient.getEmail(), "password123");
         doctorToken = getAuthToken(doctor.getEmail(), "password123");
+        adminToken = getAuthToken(admin.getEmail(), "password123");
     }
 
     // Test 1: createTurn_AsPatient_Success - problema de estado (PENDING vs SCHEDULED)
@@ -85,6 +91,36 @@ class TurnAssignedControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(createRequest)))
                 .andExpect(status().isForbidden());  // Era 201 Created
+    }
+
+    @Test
+    void createTurn_AsAdmin_Forbidden() throws Exception {
+        TurnCreateRequestDTO createRequest = new TurnCreateRequestDTO();
+        createRequest.setDoctorId(doctor.getId());
+        createRequest.setPatientId(patient.getId());
+        createRequest.setScheduledAt(OffsetDateTime.now().plusDays(1));
+
+        mockMvc.perform(post("/api/turns")
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createRequest)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Only patients can create turns"));
+    }
+
+    @Test
+    void createTurn_PatientCreatingForAnotherPatient_Forbidden() throws Exception {
+        TurnCreateRequestDTO createRequest = new TurnCreateRequestDTO();
+        createRequest.setDoctorId(doctor.getId());
+        createRequest.setPatientId(otherPatient.getId());
+        createRequest.setScheduledAt(OffsetDateTime.now().plusDays(1));
+
+        mockMvc.perform(post("/api/turns")
+                .header("Authorization", "Bearer " + patientToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createRequest)))
+                .andExpect(status().isForbidden())
+            .andExpect(content().string("Patients can only create turns for themselves"));
     }
 
     // Test 3: createTurn_WithPastDate_BadRequest - problema de validación (era 201 Created en lugar de 400 Bad Request)
@@ -133,6 +169,38 @@ class TurnAssignedControllerTest {
         doctor.setStatus("ACTIVE");
         doctor.setEmailVerified(true);
         return userRepository.save(doctor);
+    }
+
+    private User createAnotherTestPatient() {
+        User otherPatient = new User();
+        otherPatient.setEmail("patient2@example.com");
+        otherPatient.setDni(22345678L);
+        otherPatient.setPasswordHash(passwordEncoder.encode("password123"));
+        otherPatient.setName("Ana");
+        otherPatient.setSurname("Perez");
+        otherPatient.setPhone("1234500000");
+        otherPatient.setBirthdate(LocalDate.of(1992, 2, 2));
+        otherPatient.setGender("FEMALE");
+        otherPatient.setRole("PATIENT");
+        otherPatient.setStatus("ACTIVE");
+        otherPatient.setEmailVerified(true);
+        return userRepository.save(otherPatient);
+    }
+
+    private User createTestAdmin() {
+        User admin = new User();
+        admin.setEmail("admin@example.com");
+        admin.setDni(11223344L);
+        admin.setPasswordHash(passwordEncoder.encode("password123"));
+        admin.setName("Admin");
+        admin.setSurname("User");
+        admin.setPhone("1111111111");
+        admin.setBirthdate(LocalDate.of(1980, 1, 1));
+        admin.setGender("OTHER");
+        admin.setRole("ADMIN");
+        admin.setStatus("ACTIVE");
+        admin.setEmailVerified(true);
+        return userRepository.save(admin);
     }
 
     private String getAuthToken(String email, String password) throws Exception {

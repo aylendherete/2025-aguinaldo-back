@@ -39,7 +39,7 @@ class DTOValidationTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         Set<ConstraintViolation<RegisterRequestDTO>> violations = validator.validate(validRequest);
@@ -59,7 +59,7 @@ class DTOValidationTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         Set<ConstraintViolation<RegisterRequestDTO>> violations = validator.validate(invalidRequest);
@@ -80,7 +80,7 @@ class DTOValidationTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         Set<ConstraintViolation<RegisterRequestDTO>> violations = validator.validate(nullEmailRequest);
@@ -101,7 +101,7 @@ class DTOValidationTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         Set<ConstraintViolation<RegisterRequestDTO>> violations = validator.validate(emptyEmailRequest);
@@ -122,7 +122,7 @@ class DTOValidationTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         Set<ConstraintViolation<RegisterRequestDTO>> violations = validator.validate(shortPasswordRequest);
@@ -143,7 +143,7 @@ class DTOValidationTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         Set<ConstraintViolation<RegisterRequestDTO>> violations = validator.validate(nullPasswordRequest);
@@ -164,7 +164,7 @@ class DTOValidationTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         Set<ConstraintViolation<RegisterRequestDTO>> violations = validator.validate(nullNameRequest);
@@ -185,7 +185,7 @@ class DTOValidationTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         Set<ConstraintViolation<RegisterRequestDTO>> violations = validator.validate(emptyNameRequest);
@@ -206,7 +206,7 @@ class DTOValidationTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         Set<ConstraintViolation<RegisterRequestDTO>> violations = validator.validate(nullSurnameRequest);
@@ -227,7 +227,7 @@ class DTOValidationTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         Set<ConstraintViolation<RegisterRequestDTO>> violations = validator.validate(nullDniRequest);
@@ -248,7 +248,7 @@ class DTOValidationTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         Set<ConstraintViolation<RegisterRequestDTO>> violations = validator.validate(invalidDniRequest);
@@ -269,7 +269,7 @@ class DTOValidationTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         Set<ConstraintViolation<RegisterRequestDTO>> violations = validator.validate(futureBirthdateRequest);
@@ -290,7 +290,7 @@ class DTOValidationTest {
                 "INVALID_GENDER", // Invalid gender
                 null,
                 null,
-                null
+                null, null, null
         );
 
         Set<ConstraintViolation<RegisterRequestDTO>> violations = validator.validate(invalidGenderRequest);
@@ -370,7 +370,7 @@ class DTOValidationTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         Set<ConstraintViolation<ProfileUpdateRequestDTO>> violations = validator.validate(validRequest);
@@ -388,7 +388,7 @@ class DTOValidationTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         Set<ConstraintViolation<ProfileUpdateRequestDTO>> violations = validator.validate(invalidRequest);
@@ -407,7 +407,7 @@ class DTOValidationTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         Set<ConstraintViolation<ProfileUpdateRequestDTO>> violations = validator.validate(emptyNameRequest);
@@ -426,7 +426,7 @@ class DTOValidationTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         Set<ConstraintViolation<ProfileUpdateRequestDTO>> violations = validator.validate(emptySurnameRequest);
@@ -448,7 +448,7 @@ class DTOValidationTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         Set<ConstraintViolation<RegisterRequestDTO>> violations = validator.validate(xssRequest);
@@ -470,7 +470,7 @@ class DTOValidationTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         Set<ConstraintViolation<RegisterRequestDTO>> violations = validator.validate(sqlInjectionRequest);
@@ -493,7 +493,7 @@ class DTOValidationTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, longString, longString
         );
 
         Set<ConstraintViolation<RegisterRequestDTO>> violations = validator.validate(excessiveLengthRequest);
@@ -515,7 +515,7 @@ class DTOValidationTest {
                 "MALE", // Gender obligatorio, debe ser MALE o FEMALE
                 null,
                 null,
-                null
+                null, null, null
         );
 
         Set<ConstraintViolation<RegisterRequestDTO>> violations = validator.validate(minRequest);
@@ -535,7 +535,7 @@ class DTOValidationTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         Set<ConstraintViolation<RegisterRequestDTO>> violations = validator.validate(leapYearRequest);

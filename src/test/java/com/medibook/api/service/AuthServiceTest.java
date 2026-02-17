@@ -70,7 +70,7 @@ class AuthServiceTest {
             "MALE",
             null,
             null,
-            null
+            null, null, null
         );
 
         User user = new User();
@@ -123,7 +123,7 @@ class AuthServiceTest {
             "MALE",  // Agregado gender obligatorio
             null,
             null,
-            null
+            null, null, null
         );
 
         when(userRepository.existsByEmail(request.email())).thenReturn(true);
@@ -151,7 +151,7 @@ class AuthServiceTest {
             "MALE",
             "1234567890",  // Corregido: licencia médica debe ser 4-10 dígitos
             "CARDIOLOGÍA",
-            30
+            30, null, null
         );
 
         User user = new User();
@@ -204,7 +204,7 @@ class AuthServiceTest {
             "MALE",  // Agregado gender obligatorio
             null,  // Sin licencia médica
             null,  // Sin especialidad
-            null
+            null, null, null
         );
 
         IllegalArgumentException exception = assertThrows(
@@ -230,7 +230,7 @@ class AuthServiceTest {
             "MALE",
             null,
             null,
-            null
+            null, null, null
         );
 
         when(userRepository.existsByEmail(request.email())).thenReturn(false);

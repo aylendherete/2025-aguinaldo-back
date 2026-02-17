@@ -1,0 +1,20 @@
+meta {
+  name: Cancel Payment Register Unauthorized
+  type: http
+  seq: 19
+}
+
+patch {
+  url: {{baseUrl}}/api/payments/turn/{{turnId}}/cancel
+  auth: none
+}
+
+assert {
+  res.status: eq 401
+}
+
+tests {
+  test("Should block unauthenticated payment cancel", function() {
+    expect(res.getStatus()).to.equal(401);
+  });
+}

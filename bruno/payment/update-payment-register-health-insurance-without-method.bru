@@ -1,0 +1,40 @@
+meta {
+  name: Update Payment Register Health Insurance Without Method
+  type: http
+  seq: 16
+}
+
+put {
+  url: {{baseUrl}}/api/payments/turn/{{turnId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{doctorAccessToken}}
+}
+
+body:json{
+  {
+    "paymentStatus": "HEALTH INSURANCE",
+    "paymentAmount": 210,
+    "copaymentAmount": 35
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.paymentStatus: eq "HEALTH INSURANCE"
+  res.body.method: eq "HEALTH INSURANCE"
+  res.body.copaymentAmount: eq 35
+}
+
+tests {
+  test("Should auto-set HEALTH INSURANCE method and keep copayment", function() {
+    const body = res.getBody();
+    expect(res.getStatus()).to.equal(200);
+    expect(body.paymentStatus).to.equal("HEALTH INSURANCE");
+    expect(body.method).to.equal("HEALTH INSURANCE");
+    expect(body.copaymentAmount).to.equal(35);
+  });
+}

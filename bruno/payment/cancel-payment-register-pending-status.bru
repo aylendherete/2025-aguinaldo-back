@@ -1,0 +1,26 @@
+meta {
+  name: Cancel Payment Register Pending Status
+  type: http
+  seq: 22
+}
+
+patch {
+  url: {{baseUrl}}/api/payments/turn/{{pendingTurnId}}/cancel
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{doctorAccessToken}}
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("Should reject cancel when payment status is PENDING", function() {
+    const body = res.getBody();
+    expect(res.getStatus()).to.equal(400);
+    expect(body.message || body.error).to.include("PENDING cannot be canceled");
+  });
+}

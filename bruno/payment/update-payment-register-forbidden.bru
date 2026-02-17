@@ -1,0 +1,31 @@
+meta {
+  name: Update Payment Register Forbidden
+  type: http
+  seq: 10
+}
+
+put {
+  url: {{baseUrl}}/api/payments/turn/{{turnId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json{
+    {
+        "paymentStatus": "PAID"
+        }
+}
+
+assert {
+  res.status: eq 403
+}
+
+tests {
+  test("Should prevent non-doctor updates", function() {
+    expect(res.getStatus()).to.equal(403);
+  });
+}

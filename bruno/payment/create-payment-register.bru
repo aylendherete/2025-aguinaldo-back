@@ -1,0 +1,34 @@
+meta {
+  name: Create Payment Register
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/payments/turn/{{turnId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{adminAccessToken}}
+}
+
+assert {
+  res.status: eq 201
+  res.body.id: isDefined
+  res.body.turnId: eq {{turnId}}
+  res.body.paymentStatus: eq "PENDING"
+}
+
+tests {
+  test("Should create payment register successfully", function() {
+    expect(res.getStatus()).to.equal(201);
+    expect(res.getBody().paymentStatus).to.equal("PENDING");
+  });
+
+  test("Response should include timestamps", function() {
+    const body = res.getBody();
+    expect(body).to.have.property('paidAt');
+  });
+}

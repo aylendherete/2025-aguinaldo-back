@@ -1,0 +1,35 @@
+meta {
+  name: Cancel Payment Register
+  type: http
+  seq: 18
+}
+
+patch {
+  url: {{baseUrl}}/api/payments/turn/{{turnId}}/cancel
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{doctorAccessToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.paymentStatus: eq "CANCELED"
+  res.body.turnId: isDefined
+}
+
+tests {
+  test("Doctor should cancel payment register", function() {
+    const body = res.getBody();
+    expect(res.getStatus()).to.equal(200);
+    expect(body.paymentStatus).to.equal("CANCELED");
+    expect(body.turnId).to.exist;
+  });
+
+  test("Canceled payment should keep previous financial values", function() {
+    const body = res.getBody();
+    expect(body).to.have.property("paymentAmount");
+    expect(body).to.have.property("method");
+  });
+}

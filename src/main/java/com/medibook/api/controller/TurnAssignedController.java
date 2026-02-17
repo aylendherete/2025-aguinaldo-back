@@ -251,5 +251,5 @@ public class TurnAssignedController {
             return new ResponseEntity<Object>(resp.getBody(), resp.getStatusCode());
         }
     }
-   
+
 }

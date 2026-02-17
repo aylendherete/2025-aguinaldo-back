@@ -1,0 +1,38 @@
+meta {
+  name: Sign In Patient (Should Succeed)
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/auth/signin
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "patient@example.com",
+    "password": "password123"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.accessToken: isDefined
+  res.body.user.role: eq "PATIENT"
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+    bru.setEnvVar("patientAccessToken", res.getBody().accessToken);
+  }
+}
+
+tests {
+  test("Should allow patient to sign in", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().user.role).to.equal("PATIENT");
+    expect(res.getBody().accessToken).to.be.a('string');
+  });
+}

@@ -34,6 +34,15 @@
                 <constraints nullable="false"/>
             </column>
 
+
+            <column name="health_insurance" type="text">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="health_plan" type="text">
+                <constraints nullable="true"/>
+            </column> 
+
             <column name="medical_history" type="text">
                 <constraints nullable="true"/>
             </column>

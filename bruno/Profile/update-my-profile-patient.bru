@@ -23,7 +23,9 @@ body:json {
     "name": "Updated John",
     "surname": "Updated Doe",
     "phone": "+1234567890",
-    "gender": "MALE"
+    "gender": "MALE",
+    "healthInsurance": "OSDE",
+    "healthPlan": "210"
   }
 }
 
@@ -34,6 +36,8 @@ assert {
   res.body.surname: eq "Updated Doe"
   res.body.phone: eq "+1234567890"
   res.body.gender: eq "MALE"
+  res.body.healthInsurance: eq "OSDE"
+  res.body.healthPlan: eq "210"
 }
 
 tests {
@@ -43,6 +47,8 @@ tests {
     expect(res.getBody().surname).to.equal("Updated Doe");
     expect(res.getBody().phone).to.equal("+1234567890");
     expect(res.getBody().gender).to.equal("MALE");
+    expect(res.getBody().healthInsurance).to.equal("OSDE");
+    expect(res.getBody().healthPlan).to.equal("210");
   });
   
   test("Should maintain unchanged fields", function() {
@@ -60,5 +66,11 @@ tests {
       expect(profile.specialty).to.be.null;
       expect(profile.slotDurationMin).to.be.null;
     }
+  });
+
+  test("Should return coverage when provided", function() {
+    const profile = res.getBody();
+    expect(profile.healthInsurance).to.equal("OSDE");
+    expect(profile.healthPlan).to.equal("210");
   });
 }

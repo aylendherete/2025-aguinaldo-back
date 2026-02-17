@@ -29,6 +29,9 @@ public class ProfileMapper {
             dto.setSlotDurationMin(profile.getSlotDurationMin());
         }
 
+        dto.setHealthInsurance(user.getHealthInsurance());
+        dto.setHealthPlan(user.getHealthPlan());
+
         return dto;
     }
 
@@ -72,5 +75,10 @@ public class ProfileMapper {
                 profile.setSlotDurationMin(request.slotDurationMin());
             }
         }
+
+        if (request.healthInsurance() != null && !request.healthInsurance().isBlank() && request.healthPlan() != null && !request.healthPlan().isBlank()) {
+            user.setHealthInsurance(request.healthInsurance());
+            user.setHealthPlan(request.healthPlan());
+        }    
     }
 }

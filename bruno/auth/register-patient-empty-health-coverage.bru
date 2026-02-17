@@ -1,0 +1,45 @@
+meta {
+  name: Register Patient Empty Health Coverage
+  type: http
+  seq: 16
+}
+
+post {
+  url: {{baseUrl}}/api/auth/register/patient
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "patient.emptycoverage@example.com",
+    "dni": 3344556,
+    "password": "password123",
+    "name": "Luis",
+    "surname": "Perez",
+    "phone": "+5491122334455",
+    "birthdate": "1991-03-10",
+    "gender": "MALE",
+    "healthInsurance": "",
+    "healthPlan": ""
+  }
+}
+
+assert {
+  res.status: eq 201
+  res.body.user: isDefined
+  res.body.user.email: eq "patient.emptycoverage@example.com"
+  res.body.user.role: eq "PATIENT"
+  res.body.user.healthInsurance: isNull
+  res.body.user.healthPlan: isNull
+}
+
+tests {
+  test("Should register patient when health insurance and plan are empty", function() {
+    expect(res.getStatus()).to.equal(201);
+    const user = res.getBody().user;
+    expect(user.role).to.equal("PATIENT");
+    expect(user.healthInsurance).to.be.null;
+    expect(user.healthPlan).to.be.null;
+  });
+}

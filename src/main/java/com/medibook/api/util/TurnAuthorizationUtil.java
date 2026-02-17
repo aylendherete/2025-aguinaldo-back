@@ -21,20 +21,6 @@ public class TurnAuthorizationUtil {
         return null;
     }
 
-
-    public static ResponseEntity<Object> validateDoctorTurnCreation(User authenticatedUser, UUID doctorId) {
-        if (!AuthorizationUtil.isDoctor(authenticatedUser)) {
-            return AuthorizationUtil.createOwnershipAccessDeniedResponse("Only doctors can create turns for themselves");
-        }
-        
-        if (!AuthorizationUtil.hasOwnership(authenticatedUser, doctorId)) {
-            return AuthorizationUtil.createOwnershipAccessDeniedResponse("Doctors can only create turns for themselves");
-        }
-        
-        return null;
-    }
-
-
     public static ResponseEntity<Object> validatePatientTurnReservation(User authenticatedUser, UUID patientId) {
         if (!AuthorizationUtil.isPatient(authenticatedUser)) {
             return AuthorizationUtil.createOwnershipAccessDeniedResponse("Only patients can reserve turns");

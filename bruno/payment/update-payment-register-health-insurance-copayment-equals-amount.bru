@@ -1,0 +1,39 @@
+meta {
+  name: Update Payment Register Health Insurance Copayment Equals Amount
+  type: http
+  seq: 24
+}
+
+put {
+  url: {{baseUrl}}/api/payments/turn/{{turnId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{doctorAccessToken}}
+}
+
+body:json{
+  {
+    "paymentStatus": "HEALTH INSURANCE",
+    "method": "HEALTH INSURANCE",
+    "paymentAmount": 100,
+    "copaymentAmount": 100
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.paymentStatus: eq "HEALTH INSURANCE"
+}
+
+tests {
+  test("Should allow copayment equal to payment amount (100% coverage by copay)", function() {
+    const body = res.getBody();
+    expect(res.getStatus()).to.equal(200);
+    expect(body.paymentStatus).to.equal("HEALTH INSURANCE");
+    expect(body.paymentAmount).to.equal(100);
+    expect(body.copaymentAmount).to.equal(100);
+  });
+}

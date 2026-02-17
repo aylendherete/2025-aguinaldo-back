@@ -23,4 +23,6 @@ public class PatientDTO {
     private String medicalHistory;
     private Double score;
     private List<SubcategoryCountDTO> ratingSubcategories;
+    private String healthInsurance;
+    private String healthPlan;
 }

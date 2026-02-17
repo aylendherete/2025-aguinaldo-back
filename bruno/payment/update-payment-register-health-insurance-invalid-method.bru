@@ -1,0 +1,34 @@
+meta {
+  name: Update Payment Register Health Insurance Invalid Method
+  type: http
+  seq: 11
+}
+
+put {
+  url: {{baseUrl}}/api/payments/turn/{{turnId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{doctorAccessToken}}
+}
+
+body:json{
+  {
+    "paymentStatus": "HEALTH INSURANCE",
+    "method": "CASH",
+    "paymentAmount": 220
+  }
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("Should reject HEALTH INSURANCE with non-matching method", function() {
+    expect(res.getStatus()).to.equal(400);
+    expect(res.getBody().message || res.getBody().error).to.include("Payment method must be HEALTH INSURANCE");
+  });
+}

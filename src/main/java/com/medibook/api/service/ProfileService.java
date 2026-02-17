@@ -41,7 +41,25 @@ public class ProfileService {
             throw new IllegalArgumentException("Email already in use");
         }
 
+        boolean shouldUpdateCoverage = updateRequest.healthInsurance() != null || updateRequest.healthPlan() != null;
+        java.util.Map.Entry<String, String> normalizedCoverage = null;
+
+        if (shouldUpdateCoverage) {
+            if (!"PATIENT".equalsIgnoreCase(user.getRole())) {
+                throw new IllegalArgumentException("Solo los pacientes pueden actualizar obra social");
+            }
+            normalizedCoverage = AuthServiceImpl.validateAndNormalizeHealthCoverage(
+                updateRequest.healthInsurance(),
+                updateRequest.healthPlan()
+            );
+        }
+
         profileMapper.updateUserFromRequest(user, updateRequest);
+
+        if (shouldUpdateCoverage) {
+            AuthServiceImpl.applyHealthCoverage(user, normalizedCoverage);
+        }
+
         user = userRepository.save(user);
         
         return profileMapper.toProfileResponse(user);

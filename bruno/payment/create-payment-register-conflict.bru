@@ -1,0 +1,25 @@
+meta {
+  name: Create Payment Register Conflict
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/payments/turn/{{turnId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{adminAccessToken}}
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("Should reject duplicate payment register creation", function() {
+    expect(res.getStatus()).to.equal(400);
+  });
+}

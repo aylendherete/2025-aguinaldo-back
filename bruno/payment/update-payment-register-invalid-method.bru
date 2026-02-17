@@ -1,0 +1,31 @@
+meta {
+  name: Update Payment Register Invalid Method
+  type: http
+  seq: 8
+}
+
+put {
+  url: {{baseUrl}}/api/payments/turn/{{turnId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{doctorAccessToken}}
+}
+
+body:json{
+    {
+      "method": "BITCOIN"
+    }
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("Should reject unsupported payment methods", function() {
+    expect(res.getStatus()).to.equal(400);
+  });
+}

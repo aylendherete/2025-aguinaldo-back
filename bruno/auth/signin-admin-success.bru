@@ -1,0 +1,38 @@
+meta {
+  name: Sign In Admin (Should Succeed)
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/api/auth/signin
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "admin@example.com",
+    "password": "password123"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.accessToken: isDefined
+  res.body.user.role: eq "ADMIN"
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+    bru.setEnvVar("adminAccessToken", res.getBody().accessToken);
+  }
+}
+
+tests {
+  test("Should allow admin to sign in", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().user.role).to.equal("ADMIN");
+    expect(res.getBody().accessToken).to.be.a('string');
+  });
+}

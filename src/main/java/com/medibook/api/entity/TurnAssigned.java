@@ -35,4 +35,8 @@ public class TurnAssigned {
     
     @Column(name = "motive", columnDefinition = "text")
     private String motive;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "payment_register_id")
+    private PaymentRegister paymentRegister;
 }

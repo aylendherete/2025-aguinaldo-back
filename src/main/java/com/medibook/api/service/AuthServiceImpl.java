@@ -27,7 +27,7 @@ import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.Base64;
 import java.nio.charset.StandardCharsets;
-import java.util.UUID;
+
 
 
 @Service
@@ -107,6 +107,56 @@ class AuthServiceImpl implements AuthService {
         "UROLOGÍA"
     );
 
+
+    private static final java.util.Set<String> VALID_HEALTH_INSURANCES = java.util.Set.of(
+    "OSDE",
+    "SWISS MEDICAL",
+    "GALENO",
+    "MEDICUS",
+    "OMINT",
+    "SANCOR SALUD",
+    "MEDIFÉ",
+    "ACCORD SALUD",
+    "PREVENCIÓN SALUD",
+    "OSECAC",
+    "OSDEPYM",
+    "OSPRERA",
+    "OSPACA",
+    "OSPE",
+    "OSUTHGRA",
+    "OSUOM",
+    "OSMATA",
+    "IOMA",
+    "IOSFA",
+    "PAMI"
+    );
+
+
+    private static final java.util.Map<String, java.util.Set<String>> VALID_HEALTH_PLANS =
+    java.util.Map.ofEntries(
+
+    java.util.Map.entry("OSDE", java.util.Set.of("210","310","410","450","510")),
+    java.util.Map.entry( "SWISS MEDICAL", java.util.Set.of("SMG20","SMG30","SMG40","SMG50","SMG60")),
+    java.util.Map.entry("GALENO", java.util.Set.of("220", "330","440")),
+    java.util.Map.entry("MEDICUS", java.util.Set.of("MEDICUS")),
+    java.util.Map.entry("OMINT", java.util.Set.of("GLOBAL","PREMIUM")),
+    java.util.Map.entry("SANCOR SALUD", java.util.Set.of("1000","2000","3000","4000")),
+    java.util.Map.entry( "MEDIFÉ", java.util.Set.of("BRONCE","PLATA","ORO")),
+    java.util.Map.entry("PREVENCIÓN SALUD", java.util.Set.of("A1","A2","A3")),
+    java.util.Map.entry("OSECAC", java.util.Set.of("OSECAC")),
+    java.util.Map.entry("OSDEPYM", java.util.Set.of("OSDEPYM")),
+     java.util.Map.entry("OSPRERA", java.util.Set.of("OSPRERA")),
+    java.util.Map.entry("OSPACA", java.util.Set.of("OSPACA")),
+    java.util.Map.entry("OSPE", java.util.Set.of("OSPE")),
+    java.util.Map.entry("OSUTHGRA", java.util.Set.of("OSUTHGRA")),
+    java.util.Map.entry("OSUOM", java.util.Set.of("OSUOM")),
+    java.util.Map.entry("OSMATA", java.util.Set.of("OSMATA")),
+    java.util.Map.entry("IOMA", java.util.Set.of("IOMA")),
+    java.util.Map.entry("IOSFA", java.util.Set.of("IOSFA")),
+    java.util.Map.entry("PAMI", java.util.Set.of("PAMI"))
+    );
+
+
     public AuthServiceImpl(
             UserRepository userRepository,
             RefreshTokenRepository refreshTokenRepository,
@@ -168,7 +218,7 @@ class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public RegisterResponseDTO registerPatient(RegisterRequestDTO request) {
-        validateCommonFields(request);
+        java.util.Map.Entry<String, String> normalizedCoverage = validateCommonFields(request);
         
         if (userRepository.existsByEmail(request.email())) {
             throw new IllegalArgumentException("Email already registered");
@@ -180,6 +230,8 @@ class AuthServiceImpl implements AuthService {
 
         String hashedPassword = passwordEncoder.encode(request.password());
         User user = userMapper.toUser(request, "PATIENT", hashedPassword);
+
+        applyHealthCoverage(user, normalizedCoverage);
 
         user.setEmailVerified(false);
         
@@ -203,7 +255,7 @@ class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public RegisterResponseDTO registerDoctor(RegisterRequestDTO request) {        
-        validateCommonFields(request);
+        validateCommonFields(request, false);
         validateDoctorFields(request);
         
         if (userRepository.existsByEmail(request.email())) {
@@ -246,6 +298,10 @@ class AuthServiceImpl implements AuthService {
         
         if (userRepository.existsByDni(request.dni())) {
             throw new IllegalArgumentException("DNI already registered");
+        }
+
+        if (request.healthInsurance() != null || request.healthPlan() != null) {
+            throw new IllegalArgumentException("Solo los pacientes pueden cargar obra social");
         }
 
         String hashedPassword = passwordEncoder.encode(request.password());
@@ -356,7 +412,11 @@ class AuthServiceImpl implements AuthService {
         return jwtService.generateToken(user);
     }
 
-    private void validateCommonFields(RegisterRequestDTO request) {
+    private java.util.Map.Entry<String, String> validateCommonFields(RegisterRequestDTO request) {
+        return validateCommonFields(request, true);
+    }
+
+    private java.util.Map.Entry<String, String> validateCommonFields(RegisterRequestDTO request, boolean allowHealthCoverage) {
         if (request.birthdate() == null) {
             throw new IllegalArgumentException("Birthdate is required");
         }
@@ -386,6 +446,16 @@ class AuthServiceImpl implements AuthService {
         if (request.birthdate().isBefore(LocalDate.now(ARGENTINA_ZONE).minusYears(120))) {
             throw new IllegalArgumentException("Invalid birth date");
         }
+
+        if (allowHealthCoverage) {
+            return validateAndNormalizeHealthCoverage(request.healthInsurance(), request.healthPlan());
+        }
+
+        if (request.healthInsurance() != null || request.healthPlan() != null) {
+            throw new IllegalArgumentException("Solo los pacientes pueden cargar obra social");
+        }
+
+        return null;
     }
 
     private void validateDoctorFields(RegisterRequestDTO request) {
@@ -436,5 +506,57 @@ class AuthServiceImpl implements AuthService {
         emailVerificationRepository.save(verification);
 
         return rawToken;
+    }
+
+    static void applyHealthCoverage(User user, java.util.Map.Entry<String, String> coverage) {
+        if (coverage == null) {
+            user.setHealthInsurance(null);
+            user.setHealthPlan(null);
+            return;
+        }
+
+        user.setHealthInsurance(coverage.getKey());
+        user.setHealthPlan(coverage.getValue());
+    }
+
+    static java.util.Map.Entry<String, String> validateAndNormalizeHealthCoverage(String healthInsurance, String healthPlan) {
+        String normalizedInsurance = normalizeCoverageValue(healthInsurance);
+        String normalizedPlan = normalizeCoverageValue(healthPlan);
+
+        if (normalizedInsurance == null && normalizedPlan == null) {
+            return null;
+        }
+
+        if (normalizedInsurance == null) {
+            throw new IllegalArgumentException("Debe seleccionar una obra social para ese plan");
+        }
+
+        if (!VALID_HEALTH_INSURANCES.contains(normalizedInsurance)) {
+            throw new IllegalArgumentException("Invalid health insurance selected");
+        }
+
+        if (normalizedPlan == null) {
+            throw new IllegalArgumentException("Debe seleccionar un plan para la obra social");
+        }
+
+        java.util.Set<String> plans = VALID_HEALTH_PLANS.get(normalizedInsurance);
+        if (plans == null || !plans.contains(normalizedPlan)) {
+            throw new IllegalArgumentException("Invalid health plan for the selected insurance");
+        }
+
+        return java.util.Map.entry(normalizedInsurance, normalizedPlan);
+    }
+
+    static String normalizeCoverageValue(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        String trimmed = value.trim();
+        if (trimmed.isEmpty()) {
+            return null;
+        }
+
+        return trimmed.toUpperCase(java.util.Locale.ROOT);
     }
 }

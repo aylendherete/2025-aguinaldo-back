@@ -1,0 +1,34 @@
+meta {
+  name: Update Payment Register Bonus Method Status Mismatch
+  type: http
+  seq: 14
+}
+
+put {
+  url: {{baseUrl}}/api/payments/turn/{{turnId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{doctorAccessToken}}
+}
+
+body:json{
+  {
+    "paymentStatus": "PAID",
+    "method": "BONUS",
+    "paymentAmount": 140
+  }
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("Should reject BONUS method when status is not BONUS", function() {
+    expect(res.getStatus()).to.equal(400);
+    expect(res.getBody().message || res.getBody().error).to.include("Payment status must be BONUS");
+  });
+}

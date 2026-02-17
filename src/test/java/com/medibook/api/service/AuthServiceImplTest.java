@@ -97,6 +97,8 @@ class AuthServiceImplTest {
                 "MALE",
                 null,
                 null,
+                null,
+                null,
                 null
         );
 
@@ -111,7 +113,7 @@ class AuthServiceImplTest {
                 "FEMALE",
                 "123456",
                 "CARDIOLOGÍA",
-                30
+                30, null, null
         );
 
         validAdminRequest = new RegisterRequestDTO(
@@ -125,7 +127,7 @@ class AuthServiceImplTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         sampleUser = new User();
@@ -253,7 +255,7 @@ class AuthServiceImplTest {
                 "FEMALE",
                 null,
                 "CARDIOLOGÍA",
-                30
+                30, null, null
         );        IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
                 () -> authService.registerDoctor(invalidRequest)
@@ -274,7 +276,7 @@ class AuthServiceImplTest {
                 "FEMALE",
                 "123456",
                 null,
-                30
+                30, null, null
         );        IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
                 () -> authService.registerDoctor(invalidRequest)
@@ -282,6 +284,32 @@ class AuthServiceImplTest {
         
         assertTrue(exception.getMessage().contains("Specialty is required for doctors"));
     }
+
+        @Test
+        void registerDoctor_WithHealthCoverage_ThrowsException() {
+                RegisterRequestDTO request = new RegisterRequestDTO(
+                                "doctor@test.com",
+                                87654321L,
+                                "password123",
+                                "Dr. Jane",
+                                "Smith",
+                                "0987654321",
+                                LocalDate.of(1980, 1, 1),
+                                "FEMALE",
+                                "123456",
+                                "CARDIOLOGÍA",
+                                30,
+                                "OSDE",
+                                "210"
+                );
+
+                IllegalArgumentException exception = assertThrows(
+                                IllegalArgumentException.class,
+                                () -> authService.registerDoctor(request)
+                );
+
+                assertEquals("Solo los pacientes pueden cargar obra social", exception.getMessage());
+        }
 
     @Test
     void registerDoctor_EmailAlreadyExists_ThrowsException() {
@@ -369,6 +397,32 @@ class AuthServiceImplTest {
         assertTrue(exception.getMessage().contains("DNI already registered"));
         verify(userRepository).existsByEmail(validAdminRequest.email());
         verify(userRepository).existsByDni(validAdminRequest.dni());
+    }
+
+    @Test
+    void registerAdmin_WithHealthCoverage_ThrowsException() {
+        RegisterRequestDTO request = new RegisterRequestDTO(
+                "admin.coverage@test.com",
+                22222222L,
+                "password123",
+                "Admin",
+                "User",
+                "1111111111",
+                LocalDate.of(1985, 1, 1),
+                "MALE",
+                null,
+                null,
+                null,
+                "OSDE",
+                "210"
+        );
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> authService.registerAdmin(request)
+        );
+
+        assertEquals("Solo los pacientes pueden cargar obra social", exception.getMessage());
     }
 
     @Test
@@ -610,6 +664,8 @@ class AuthServiceImplTest {
                 "MALE",
                 null,
                 null,
+                null,
+                null,
                 null
         );
 
@@ -743,6 +799,8 @@ class AuthServiceImplTest {
                 "MALE",
                 null,
                 null,
+                null,
+                null,
                 null
         );
 
@@ -770,6 +828,8 @@ class AuthServiceImplTest {
                 "1234567890",
                 LocalDate.of(1990, 1, 1),
                 "MALE",
+                null,
+                null,
                 null,
                 null,
                 null
@@ -801,6 +861,8 @@ class AuthServiceImplTest {
                 "MALE",
                 null,
                 null,
+                null,
+                null,
                 null
         );
 
@@ -828,6 +890,8 @@ class AuthServiceImplTest {
                 "1234567890",
                 LocalDate.of(1990, 1, 1),
                 "MALE",
+                null,
+                null,
                 null,
                 null,
                 null
@@ -859,6 +923,8 @@ class AuthServiceImplTest {
                 "MALE",
                 null,
                 null,
+                null,
+                null,
                 null
         );
 
@@ -881,6 +947,8 @@ class AuthServiceImplTest {
                 "1234567890",
                 LocalDate.of(1990, 1, 1),
                 "MALE",
+                null,
+                null,
                 null,
                 null,
                 null
@@ -907,7 +975,7 @@ class AuthServiceImplTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         IllegalArgumentException exception = assertThrows(
@@ -931,7 +999,7 @@ class AuthServiceImplTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         IllegalArgumentException exception = assertThrows(
@@ -956,6 +1024,8 @@ class AuthServiceImplTest {
                 "MALE",
                 null,
                 null,
+                null,
+                null,
                 null
         );
 
@@ -973,6 +1043,118 @@ class AuthServiceImplTest {
     }
 
     @Test
+    void registerPatient_WithValidHealthCoverage_Success() {
+        RegisterRequestDTO request = buildPatientRequest(
+                "patient.osde@test.com",
+                22334455L,
+                "OSDE",
+                "210"
+        );
+
+        when(userRepository.existsByEmail(request.email())).thenReturn(false);
+        when(userRepository.existsByDni(request.dni())).thenReturn(false);
+        when(passwordEncoder.encode(request.password())).thenReturn("encodedPassword");
+
+        User coverageUser = new User();
+        coverageUser.setId(UUID.randomUUID());
+        coverageUser.setEmail(request.email());
+        coverageUser.setName("John");
+        coverageUser.setSurname("Doe");
+        coverageUser.setRole("PATIENT");
+        coverageUser.setStatus("ACTIVE");
+        coverageUser.setHealthInsurance("OSDE");
+        coverageUser.setHealthPlan("210");
+
+        when(userMapper.toUser(eq(request), eq("PATIENT"), eq("encodedPassword"))).thenReturn(coverageUser);
+        when(userRepository.save(coverageUser)).thenReturn(coverageUser);
+        when(userMapper.toRegisterResponse(coverageUser)).thenReturn(
+                new RegisterResponseDTO(
+                        coverageUser.getId(),
+                        coverageUser.getEmail(),
+                        coverageUser.getName(),
+                        coverageUser.getSurname(),
+                        coverageUser.getRole(),
+                        coverageUser.getStatus()
+                )
+        );
+
+        RegisterResponseDTO result = authService.registerPatient(request);
+
+        assertNotNull(result);
+        assertEquals(coverageUser.getId(), result.id());
+        verify(userMapper).toUser(eq(request), eq("PATIENT"), eq("encodedPassword"));
+        verify(userRepository).save(coverageUser);
+    }
+
+    @Test
+    void registerPatient_HealthPlanWithoutInsurance_ThrowsException() {
+        RegisterRequestDTO request = buildPatientRequest(
+                "patient.planonly@test.com",
+                22334456L,
+                null,
+                "210"
+        );
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> authService.registerPatient(request)
+        );
+
+        assertEquals("Debe seleccionar una obra social para ese plan", exception.getMessage());
+    }
+
+    @Test
+    void registerPatient_InsuranceWithoutPlan_ThrowsException() {
+        RegisterRequestDTO request = buildPatientRequest(
+                "patient.insuranceonly@test.com",
+                22334457L,
+                "OSDE",
+                null
+        );
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> authService.registerPatient(request)
+        );
+
+        assertEquals("Debe seleccionar un plan para la obra social", exception.getMessage());
+    }
+
+    @Test
+    void registerPatient_InvalidHealthInsurance_ThrowsException() {
+        RegisterRequestDTO request = buildPatientRequest(
+                "patient.invalidinsurance@test.com",
+                22334458L,
+                "INVALID",
+                "210"
+        );
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> authService.registerPatient(request)
+        );
+
+        assertEquals("Invalid health insurance selected", exception.getMessage());
+    }
+
+    @Test
+    void registerPatient_InvalidHealthPlanForInsurance_ThrowsException() {
+        RegisterRequestDTO request = buildPatientRequest(
+                "patient.invalidplan@test.com",
+                22334459L,
+                "OSDE",
+                "999"
+        );
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> authService.registerPatient(request)
+        );
+
+        assertEquals("Invalid health plan for the selected insurance", exception.getMessage());
+    }
+
+    @Test
     void registerPatient_Under18YearsOld_ThrowsException() {
         LocalDate under18 = LocalDate.now(ARGENTINA_ZONE).minusYears(17);
         RegisterRequestDTO request = new RegisterRequestDTO(
@@ -986,7 +1168,7 @@ class AuthServiceImplTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         IllegalArgumentException exception = assertThrows(
@@ -1011,7 +1193,7 @@ class AuthServiceImplTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         when(userRepository.existsByEmail(request.email())).thenReturn(false);
@@ -1041,7 +1223,7 @@ class AuthServiceImplTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         IllegalArgumentException exception = assertThrows(
@@ -1065,7 +1247,7 @@ class AuthServiceImplTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         // Empty name throws NullPointerException in UserMapper
@@ -1088,7 +1270,7 @@ class AuthServiceImplTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         // Whitespace name throws NullPointerException in UserMapper
@@ -1111,7 +1293,7 @@ class AuthServiceImplTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         // Empty surname throws NullPointerException in UserMapper
@@ -1134,7 +1316,7 @@ class AuthServiceImplTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         // Whitespace surname throws NullPointerException in UserMapper
@@ -1157,7 +1339,7 @@ class AuthServiceImplTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         IllegalArgumentException exception = assertThrows(
@@ -1181,7 +1363,7 @@ class AuthServiceImplTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         IllegalArgumentException exception = assertThrows(
@@ -1205,7 +1387,7 @@ class AuthServiceImplTest {
                 "",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         IllegalArgumentException exception = assertThrows(
@@ -1229,7 +1411,7 @@ class AuthServiceImplTest {
                 "   ",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         IllegalArgumentException exception = assertThrows(
@@ -1253,7 +1435,7 @@ class AuthServiceImplTest {
                 "MALE",
                 null,
                 null,
-                null
+                null, null, null
         );
 
         IllegalArgumentException exception = assertThrows(
@@ -1277,7 +1459,9 @@ class AuthServiceImplTest {
                 "FEMALE",
                 "   ",
                 "CARDIOLOGÍA",
-                30
+                30,
+                null,
+                null
         );
 
         IllegalArgumentException exception = assertThrows(
@@ -1301,7 +1485,9 @@ class AuthServiceImplTest {
                 "FEMALE",
                 "123456",
                 "   ",
-                30
+                30,
+                null,
+                null
         );
 
         IllegalArgumentException exception = assertThrows(
@@ -1520,7 +1706,9 @@ class AuthServiceImplTest {
                 "FEMALE",
                 "ABC123",
                 "CARDIOLOGÍA",
-                30
+                30,
+                null,
+                null
         );
 
         IllegalArgumentException exception = assertThrows(
@@ -1544,7 +1732,9 @@ class AuthServiceImplTest {
                 "FEMALE",
                 "123",
                 "CARDIOLOGÍA",
-                30
+                30,
+                null,
+                null
         );
 
         IllegalArgumentException exception = assertThrows(
@@ -1568,7 +1758,9 @@ class AuthServiceImplTest {
                 "FEMALE",
                 "12345678901",
                 "CARDIOLOGÍA",
-                30
+                30,
+                null,
+                null
         );
 
         IllegalArgumentException exception = assertThrows(
@@ -1592,7 +1784,9 @@ class AuthServiceImplTest {
                 "FEMALE",
                 "123456",
                 "INVALID_SPECIALTY",
-                30
+                30,
+                null,
+                null
         );
 
         IllegalArgumentException exception = assertThrows(
@@ -1616,7 +1810,9 @@ class AuthServiceImplTest {
                 "FEMALE",
                 "123456",
                 "INVALID",
-                30
+                30,
+                null,
+                null
         );
 
         IllegalArgumentException exception = assertThrows(
@@ -1640,7 +1836,9 @@ class AuthServiceImplTest {
                 "FEMALE",
                 "123456",
                 "INVALID_SPECIALTY_TOO_LONG_FOR_TESTING_PURPOSES",
-                30
+                30,
+                null,
+                null
         );
 
         IllegalArgumentException exception = assertThrows(
@@ -1664,7 +1862,7 @@ class AuthServiceImplTest {
                 "FEMALE",
                 "123456",
                 "CARDIOLOGÍA",
-                null
+                null, null, null
         );
 
         IllegalArgumentException exception = assertThrows(
@@ -1674,6 +1872,24 @@ class AuthServiceImplTest {
 
         assertTrue(exception.getMessage().contains("Slot duration is required for doctors"));
     }
+
+        private RegisterRequestDTO buildPatientRequest(String email, Long dni, String healthInsurance, String healthPlan) {
+                return new RegisterRequestDTO(
+                                email,
+                                dni,
+                                "password123",
+                                "John",
+                                "Doe",
+                                "1234567890",
+                                LocalDate.of(1990, 1, 1),
+                                "MALE",
+                                null,
+                                null,
+                                null,
+                                healthInsurance,
+                                healthPlan
+                );
+        }
 
     @Test
     void registerDoctor_SlotDuration_OutOfRange_ThrowsException() {
@@ -1688,7 +1904,7 @@ class AuthServiceImplTest {
                 "FEMALE",
                 "123456",
                 "CARDIOLOGÍA",
-                1
+                1, null, null
         );
 
         IllegalArgumentException e1 = assertThrows(
@@ -1708,7 +1924,7 @@ class AuthServiceImplTest {
                 "FEMALE",
                 "123456",
                 "CARDIOLOGÍA",
-                1000
+                1000, null, null
         );
 
         IllegalArgumentException e2 = assertThrows(
