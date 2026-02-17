@@ -154,6 +154,33 @@ class DoctorAvailabilityServiceTest {
     }
 
     @Test
+    void saveAvailability_AllWeekDisabled_Success() throws Exception {
+        UUID doctorId = doctorUser.getId();
+        List<DayAvailabilityDTO> allDisabled = List.of(
+            new DayAvailabilityDTO("MONDAY", false, List.of()),
+            new DayAvailabilityDTO("TUESDAY", false, List.of()),
+            new DayAvailabilityDTO("WEDNESDAY", false, List.of()),
+            new DayAvailabilityDTO("THURSDAY", false, List.of()),
+            new DayAvailabilityDTO("FRIDAY", false, List.of()),
+            new DayAvailabilityDTO("SATURDAY", false, List.of()),
+            new DayAvailabilityDTO("SUNDAY", false, List.of())
+        );
+        DoctorAvailabilityRequestDTO request = new DoctorAvailabilityRequestDTO(allDisabled);
+        String expectedJson = "[{\"day\":\"MONDAY\",\"enabled\":false,\"ranges\":[]},{\"day\":\"TUESDAY\",\"enabled\":false,\"ranges\":[]},{\"day\":\"WEDNESDAY\",\"enabled\":false,\"ranges\":[]},{\"day\":\"THURSDAY\",\"enabled\":false,\"ranges\":[]},{\"day\":\"FRIDAY\",\"enabled\":false,\"ranges\":[]},{\"day\":\"SATURDAY\",\"enabled\":false,\"ranges\":[]},{\"day\":\"SUNDAY\",\"enabled\":false,\"ranges\":[]}]";
+
+        when(userRepository.findById(doctorId)).thenReturn(Optional.of(doctorUser));
+        when(objectMapper.writeValueAsString(allDisabled)).thenReturn(expectedJson);
+        when(userRepository.save(doctorUser)).thenReturn(doctorUser);
+
+        doctorAvailabilityService.saveAvailability(doctorId, request);
+
+        assertEquals(expectedJson, doctorProfile.getAvailabilitySchedule());
+        verify(userRepository).findById(doctorId);
+        verify(objectMapper).writeValueAsString(allDisabled);
+        verify(userRepository).save(doctorUser);
+    }
+
+    @Test
     void saveAvailability_JsonProcessingException() throws Exception {
         UUID doctorId = doctorUser.getId();
         

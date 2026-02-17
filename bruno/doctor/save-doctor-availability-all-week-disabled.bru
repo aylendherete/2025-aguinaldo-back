@@ -1,0 +1,43 @@
+meta {
+  name: Save Doctor Availability - All Week Disabled
+  type: http
+  seq: 20
+}
+
+post {
+  url: {{baseUrl}}/api/doctors/{{doctorId}}/availability
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{doctorAccessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "weeklyAvailability": [
+      { "day": "MONDAY", "enabled": false, "ranges": [] },
+      { "day": "TUESDAY", "enabled": false, "ranges": [] },
+      { "day": "WEDNESDAY", "enabled": false, "ranges": [] },
+      { "day": "THURSDAY", "enabled": false, "ranges": [] },
+      { "day": "FRIDAY", "enabled": false, "ranges": [] },
+      { "day": "SATURDAY", "enabled": false, "ranges": [] },
+      { "day": "SUNDAY", "enabled": false, "ranges": [] }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("Should save empty weekly availability (doctor unavailable all week)", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}
