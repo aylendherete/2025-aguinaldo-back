@@ -50,6 +50,7 @@ public class SecurityConfig {
                 // Rutas públicas
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/gymcloud/**").permitAll()
+                .requestMatchers("/health").permitAll()
                 .requestMatchers("/error").permitAll()
                 // Rutas privadas
                 .anyRequest().authenticated()
