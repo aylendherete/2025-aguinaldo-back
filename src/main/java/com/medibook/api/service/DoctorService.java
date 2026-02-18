@@ -140,6 +140,8 @@ public class DoctorService {
                 .birthdate(patient.getBirthdate())
                 .gender(patient.getGender())
                 .status(patient.getStatus())
+                .healthInsurance(patient.getHealthInsurance())
+                .healthPlan(patient.getHealthPlan())
                 .medicalHistories(medicalHistories)
                 .medicalHistory(latestMedicalHistory)
                 .score(patient.getScore())

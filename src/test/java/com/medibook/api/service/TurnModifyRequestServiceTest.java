@@ -189,7 +189,7 @@ class TurnModifyRequestServiceTest {
         
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> service.createModifyRequest(requestDTO, patient));
-        assertEquals("There is already a pending modification request for this appointment", exception.getMessage());
+        assertEquals("Ya hay una solicitud de modificación pendiente para este turno", exception.getMessage());
         
         verify(turnAssignedRepository).findById(requestDTO.getTurnId());
         verify(turnModifyRequestRepository).findPendingRequestByTurnAndPatient(requestDTO.getTurnId(), patient.getId());
