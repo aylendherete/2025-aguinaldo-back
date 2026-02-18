@@ -13,6 +13,7 @@ public class DoctorDTO {
     private UUID id;
     private String name;
     private String surname;
+    private String gender;
     private String email;
     private String medicalLicense;
     private String specialty;

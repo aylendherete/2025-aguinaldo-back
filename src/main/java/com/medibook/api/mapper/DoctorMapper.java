@@ -32,6 +32,7 @@ public class DoctorMapper {
                 .id(user.getId())
                 .name(user.getName())
                 .surname(user.getSurname())
+                .gender(user.getGender())
                 .email(user.getEmail())
                 .medicalLicense(user.getDoctorProfile().getMedicalLicense())
                 .specialty(user.getDoctorProfile().getSpecialty())

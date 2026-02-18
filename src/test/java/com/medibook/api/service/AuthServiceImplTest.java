@@ -437,7 +437,7 @@ class AuthServiceImplTest {
         
         when(authMapper.toSignInResponse(eq(sampleUser), any(String.class), any(String.class))).thenReturn(
             new SignInResponseDTO(sampleUser.getId(), sampleUser.getEmail(), sampleUser.getName(), 
-                                sampleUser.getSurname(), sampleUser.getRole(), sampleUser.getStatus(),
+                                sampleUser.getSurname(), sampleUser.getRole(), sampleUser.getStatus(),sampleUser.getGender(),
                                 "access_token", "refresh_token")
         );
 
@@ -527,7 +527,7 @@ class AuthServiceImplTest {
         
         when(authMapper.toSignInResponse(eq(pendingDoctor), any(String.class), any(String.class))).thenReturn(
             new SignInResponseDTO(pendingDoctor.getId(), pendingDoctor.getEmail(), pendingDoctor.getName(), 
-                                pendingDoctor.getSurname(), pendingDoctor.getRole(), pendingDoctor.getStatus(),
+                                pendingDoctor.getSurname(), pendingDoctor.getRole(), pendingDoctor.getStatus(),pendingDoctor.getGender(),
                                 "access_token", "refresh_token")
         );
 
@@ -583,7 +583,7 @@ class AuthServiceImplTest {
         when(refreshTokenRepository.save(any(RefreshToken.class))).thenReturn(refreshToken);
         when(authMapper.toSignInResponse(eq(sampleUser), any(String.class), any(String.class))).thenReturn(
             new SignInResponseDTO(sampleUser.getId(), sampleUser.getEmail(), sampleUser.getName(), 
-                                sampleUser.getSurname(), sampleUser.getRole(), sampleUser.getStatus(),
+                                sampleUser.getSurname(), sampleUser.getRole(), sampleUser.getStatus(),sampleUser.getGender(),
                                 "new_access_token", "new_refresh_token")
         );
 
@@ -643,7 +643,7 @@ class AuthServiceImplTest {
         when(refreshTokenRepository.save(any(RefreshToken.class))).thenReturn(refreshToken);
         when(authMapper.toSignInResponse(eq(sampleUser), any(String.class), any(String.class))).thenReturn(
             new SignInResponseDTO(sampleUser.getId(), sampleUser.getEmail(), sampleUser.getName(), 
-                                sampleUser.getSurname(), sampleUser.getRole(), sampleUser.getStatus(),
+                                sampleUser.getSurname(), sampleUser.getRole(), sampleUser.getStatus(),sampleUser.getGender(),
                                 "new_access_token", "new_refresh_token")
         );
 
@@ -754,9 +754,9 @@ class AuthServiceImplTest {
         // Mock de authMapper para ambas respuestas
         when(authMapper.toSignInResponse(eq(sampleUser), anyString(), anyString()))
                 .thenReturn(new SignInResponseDTO(sampleUser.getId(), sampleUser.getEmail(), sampleUser.getName(), 
-                        sampleUser.getSurname(), sampleUser.getRole(), sampleUser.getStatus(), "jwt1", "refresh1"))
+                        sampleUser.getSurname(), sampleUser.getRole(), sampleUser.getStatus(), sampleUser.getGender(), "jwt1", "refresh1"))
                 .thenReturn(new SignInResponseDTO(sampleUser.getId(), sampleUser.getEmail(), sampleUser.getName(),
-                        sampleUser.getSurname(), sampleUser.getRole(), sampleUser.getStatus(), "jwt2", "refresh2"));
+                        sampleUser.getSurname(), sampleUser.getRole(), sampleUser.getStatus(),sampleUser.getGender() ,"jwt2", "refresh2"));
 
         when(jwtService.generateToken(any(User.class)))
                 .thenReturn("token-1")

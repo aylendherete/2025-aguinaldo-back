@@ -15,6 +15,7 @@ public class AuthMapper {
             user.getSurname(),
             user.getRole(),
             user.getStatus(),
+            user.getGender(),
             accessToken,
             refreshToken
         );
