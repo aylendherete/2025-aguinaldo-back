@@ -1,0 +1,35 @@
+meta {
+  name: Update Payment Register Current Status Health Insurance Not Allowed
+  type: http
+  seq: 35
+}
+
+put {
+  url: {{baseUrl}}/api/payments/turn/{{healthInsuranceTurnId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{doctorAccessToken}}
+}
+
+body:json{
+  {
+    "paymentStatus": "PAID",
+    "method": "CASH",
+    "paymentAmount": 90
+  }
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("Should reject update when current payment status is HEALTH INSURANCE", function() {
+    const body = res.getBody();
+    expect(res.getStatus()).to.equal(400);
+    expect(body.message || body.error).to.include("Payment register with status HEALTH INSURANCE cannot be updated");
+  });
+}
