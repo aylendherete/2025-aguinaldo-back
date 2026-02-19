@@ -95,11 +95,11 @@ public class PaymentRegisterService {
         Double requestedPaymentAmount = request.getPaymentAmount();
         Double requestedCopaymentAmount = request.getCopaymentAmount();
 
-        if (!"BONUS".equals(requestedStatus) && requestedPaymentAmount != null && requestedPaymentAmount <= 0) {
+        if (requestedPaymentAmount != null && requestedPaymentAmount <= 0) {
+            if ("BONUS".equals(requestedStatus)) {
+                throw new RuntimeException("Payment amount must be greater than zero when payment status is BONUS");
+            }
             throw new RuntimeException("Payment amount must be greater than zero");
-        }
-        if ("BONUS".equals(requestedStatus) && requestedPaymentAmount != null && requestedPaymentAmount != 0) {
-            throw new RuntimeException("Payment amount must be zero when payment status is BONUS");
         }
         if  ("HEALTH INSURANCE".equals(requestedStatus) && (requestedCopaymentAmount == null || requestedCopaymentAmount < 0)) {
             throw new RuntimeException("Copayment amount must be provided and greater or equal than zero when payment status is HEALTH INSURANCE");

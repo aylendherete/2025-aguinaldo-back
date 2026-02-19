@@ -17,7 +17,7 @@ auth:bearer {
 body:json{
   {
     "paymentStatus": "BONUS",
-    "paymentAmount": 10
+    "paymentAmount": 0
   }
 }
 
@@ -26,9 +26,9 @@ assert {
 }
 
 tests {
-  test("Should reject BONUS payment amount different than zero", function() {
+  test("Should reject BONUS payment amount equal to zero", function() {
     const body = res.getBody();
     expect(res.getStatus()).to.equal(400);
-    expect(body.message || body.error).to.include("Payment amount must be zero when payment status is BONUS");
+    expect(body.message || body.error).to.include("Payment amount must be greater than zero when payment status is BONUS");
   });
 }

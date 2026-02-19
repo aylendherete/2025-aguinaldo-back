@@ -340,7 +340,7 @@ class PaymentRegisterServiceTest {
     void updatePaymentRegister_bonusStatusWithoutMethod_setsBonusMethod() {
         PaymentRegisterRequestDTO requestDTO = new PaymentRegisterRequestDTO();
         requestDTO.setPaymentStatus("BONUS");
-        requestDTO.setPaymentAmount(0.0);
+        requestDTO.setPaymentAmount(120.0);
 
         when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
         when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.of(savedPayment));
@@ -360,7 +360,7 @@ class PaymentRegisterServiceTest {
         PaymentRegister updated = captor.getValue();
         assertEquals("BONUS", updated.getPaymentStatus());
         assertEquals("BONUS", updated.getMethod());
-        assertEquals(0.0, updated.getPaymentAmount());
+        assertEquals(120.0, updated.getPaymentAmount());
     }
 
     @Test
@@ -396,17 +396,17 @@ class PaymentRegisterServiceTest {
     }
 
     @Test
-    void updatePaymentRegister_bonusWithNonZeroAmount_throwsException() {
+    void updatePaymentRegister_bonusWithZeroAmount_throwsException() {
         PaymentRegisterRequestDTO requestDTO = new PaymentRegisterRequestDTO();
         requestDTO.setPaymentStatus("BONUS");
-        requestDTO.setPaymentAmount(10.0);
+        requestDTO.setPaymentAmount(0.0);
 
         when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
 
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
                 paymentRegisterService.updatePaymentRegister(turnId, requestDTO, doctor.getId(), doctor.getRole()));
 
-        assertEquals("Payment amount must be zero when payment status is BONUS", exception.getMessage());
+        assertEquals("Payment amount must be greater than zero when payment status is BONUS", exception.getMessage());
         verify(paymentRepo, never()).findByTurnId(any());
         verify(paymentRepo, never()).save(any());
     }
