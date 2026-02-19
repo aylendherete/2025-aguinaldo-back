@@ -421,7 +421,7 @@ class PaymentRegisterServiceTest {
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
                 paymentRegisterService.updatePaymentRegister(turnId, requestDTO, doctor.getId(), doctor.getRole()));
 
-        assertEquals("Payment amount must be a finite number", exception.getMessage());
+        assertEquals("Payment amount must be less than 10 million", exception.getMessage());
         verify(paymentRepo, never()).findByTurnId(any());
         verify(paymentRepo, never()).save(any());
     }
@@ -471,7 +471,7 @@ class PaymentRegisterServiceTest {
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
                 paymentRegisterService.updatePaymentRegister(turnId, requestDTO, doctor.getId(), doctor.getRole()));
 
-        assertEquals("Copayment amount must be a finite number", exception.getMessage());
+        assertEquals("Copayment amount must be less than 10 million", exception.getMessage());
         verify(paymentRepo, never()).findByTurnId(any());
         verify(paymentRepo, never()).save(any());
     }
