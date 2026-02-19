@@ -30,6 +30,6 @@ tests {
   test("Should reject overflow payment amount", function() {
     const body = res.getBody();
     expect(res.getStatus()).to.equal(400);
-    expect(body.message || body.error).to.include("Payment amount must be a finite number");
+    expect(body.message || body.error).to.include("Payment amount must be less than 10 million");
   });
 }

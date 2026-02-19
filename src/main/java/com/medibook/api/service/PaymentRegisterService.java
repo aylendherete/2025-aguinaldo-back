@@ -347,12 +347,9 @@ public class PaymentRegisterService {
     }
 
     private void validateFiniteAmount(Double amount, String fieldName) {
-        if (amount == null) {
-            return;
-        }
 
-        if (!Double.isFinite(amount)) {
-            throw new RuntimeException(fieldName + " must be a finite number");
+        if (amount != null && amount > 9999999.99) {
+            throw new RuntimeException(fieldName + " must be less than 10 million");
         }
     }
 }
