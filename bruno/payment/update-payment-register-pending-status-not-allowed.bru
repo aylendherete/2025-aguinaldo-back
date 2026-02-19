@@ -1,0 +1,35 @@
+meta {
+  name: Update Payment Register Pending Status Not Allowed
+  type: http
+  seq: 32
+}
+
+put {
+  url: {{baseUrl}}/api/payments/turn/{{turnId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{doctorAccessToken}}
+}
+
+body:json{
+  {
+    "paymentStatus": "PENDING",
+    "method": "CASH",
+    "paymentAmount": 50
+  }
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("Should reject updates that set payment status to PENDING", function() {
+    const body = res.getBody();
+    expect(res.getStatus()).to.equal(400);
+    expect(body.message || body.error).to.include("Payment status cannot be updated to PENDING");
+  });
+}

@@ -90,6 +90,32 @@ public class PaymentRegisterService {
         String requestedStatus = null;
         if (request.getPaymentStatus() != null) {
             requestedStatus = normalizeStatus(request.getPaymentStatus());
+            if ("PENDING".equals(requestedStatus)) {
+                throw new RuntimeException("Payment status cannot be updated to PENDING");
+            }
+        }
+
+        String requestedMethod = null;
+        if (request.getMethod() != null) {
+            requestedMethod = normalizeMethod(request.getMethod());
+        }
+
+        if (requestedStatus != null && requestedMethod != null) {
+            if ("BONUS".equals(requestedStatus) && !"BONUS".equals(requestedMethod)) {
+                throw new RuntimeException("Payment method must be BONUS when payment status is BONUS");
+            }
+
+            if ("HEALTH INSURANCE".equals(requestedStatus) && !"HEALTH INSURANCE".equals(requestedMethod)) {
+                throw new RuntimeException("Payment method must be HEALTH INSURANCE when payment status is HEALTH INSURANCE");
+            }
+
+            if ("BONUS".equals(requestedMethod) && !"BONUS".equals(requestedStatus)) {
+                throw new RuntimeException("Payment status must be BONUS when payment method is BONUS");
+            }
+
+            if ("HEALTH INSURANCE".equals(requestedMethod) && !"HEALTH INSURANCE".equals(requestedStatus)) {
+                throw new RuntimeException("Payment status must be HEALTH INSURANCE when payment method is HEALTH INSURANCE");
+            }
         }
 
         Double requestedPaymentAmount = request.getPaymentAmount();
@@ -134,7 +160,7 @@ public class PaymentRegisterService {
         }
         String targetMethod = payment.getMethod();
         if (request.getMethod() != null) {
-            targetMethod = normalizeMethod(request.getMethod());
+            targetMethod = requestedMethod;
         }
 
         if ("HEALTH INSURANCE".equals(targetStatus)) {

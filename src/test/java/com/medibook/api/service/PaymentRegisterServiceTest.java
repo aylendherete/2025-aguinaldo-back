@@ -241,6 +241,21 @@ class PaymentRegisterServiceTest {
     }
 
     @Test
+    void updatePaymentRegister_withPendingStatus_throwsException() {
+        PaymentRegisterRequestDTO requestDTO = new PaymentRegisterRequestDTO();
+        requestDTO.setPaymentStatus("PENDING");
+
+        when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                paymentRegisterService.updatePaymentRegister(turnId, requestDTO, doctor.getId(), doctor.getRole()));
+
+        assertEquals("Payment status cannot be updated to PENDING", exception.getMessage());
+        verify(paymentRepo, never()).findByTurnId(any());
+        verify(paymentRepo, never()).save(any());
+    }
+
+    @Test
     void updatePaymentRegister_healthInsuranceAllowsCopayment() {
         PaymentRegisterRequestDTO requestDTO = new PaymentRegisterRequestDTO();
         requestDTO.setPaymentStatus("health insurance");
@@ -279,12 +294,12 @@ class PaymentRegisterServiceTest {
         requestDTO.setMethod("CASH");
 
         when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
-        when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.of(savedPayment));
 
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
                 paymentRegisterService.updatePaymentRegister(turnId, requestDTO, doctor.getId(), doctor.getRole()));
 
         assertEquals("Payment method must be HEALTH INSURANCE when payment status is HEALTH INSURANCE", exception.getMessage());
+        verify(paymentRepo, never()).findByTurnId(any());
         verify(paymentRepo, never()).save(any());
     }
 
@@ -295,12 +310,12 @@ class PaymentRegisterServiceTest {
         requestDTO.setMethod("TRANSFER");
 
         when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
-        when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.of(savedPayment));
 
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
                 paymentRegisterService.updatePaymentRegister(turnId, requestDTO, doctor.getId(), doctor.getRole()));
 
         assertEquals("Payment method must be BONUS when payment status is BONUS", exception.getMessage());
+        verify(paymentRepo, never()).findByTurnId(any());
         verify(paymentRepo, never()).save(any());
     }
 
@@ -311,12 +326,12 @@ class PaymentRegisterServiceTest {
         requestDTO.setMethod("HEALTH INSURANCE");
 
         when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
-        when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.of(savedPayment));
 
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
                 paymentRegisterService.updatePaymentRegister(turnId, requestDTO, doctor.getId(), doctor.getRole()));
 
         assertEquals("Payment status must be HEALTH INSURANCE when payment method is HEALTH INSURANCE", exception.getMessage());
+        verify(paymentRepo, never()).findByTurnId(any());
         verify(paymentRepo, never()).save(any());
     }
 
@@ -327,12 +342,12 @@ class PaymentRegisterServiceTest {
         requestDTO.setMethod("BONUS");
 
         when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
-        when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.of(savedPayment));
 
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
                 paymentRegisterService.updatePaymentRegister(turnId, requestDTO, doctor.getId(), doctor.getRole()));
 
         assertEquals("Payment status must be BONUS when payment method is BONUS", exception.getMessage());
+        verify(paymentRepo, never()).findByTurnId(any());
         verify(paymentRepo, never()).save(any());
     }
 
@@ -643,12 +658,12 @@ class PaymentRegisterServiceTest {
         requestDTO.setMethod("BITCOIN");
 
         when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
-        when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.of(savedPayment));
 
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
                 paymentRegisterService.updatePaymentRegister(turnId, requestDTO, doctor.getId(), doctor.getRole()));
 
         assertEquals("Invalid payment method", exception.getMessage());
+        verify(paymentRepo, never()).findByTurnId(any());
         verify(paymentRepo, never()).save(any());
     }
 
