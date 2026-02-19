@@ -95,6 +95,9 @@ public class PaymentRegisterService {
         Double requestedPaymentAmount = request.getPaymentAmount();
         Double requestedCopaymentAmount = request.getCopaymentAmount();
 
+        validateFiniteAmount(requestedPaymentAmount, "Payment amount");
+        validateFiniteAmount(requestedCopaymentAmount, "Copayment amount");
+
         if (requestedPaymentAmount != null && requestedPaymentAmount <= 0) {
             if ("BONUS".equals(requestedStatus)) {
                 throw new RuntimeException("Payment amount must be greater than zero when payment status is BONUS");
@@ -305,12 +308,25 @@ public class PaymentRegisterService {
             return;
         }
 
+        validateFiniteAmount(paymentAmount, "Payment amount");
+        validateFiniteAmount(copaymentAmount, "Copayment amount");
+
         if (paymentAmount == null) {
             throw new RuntimeException("Payment amount is required when copayment amount is set");
         }
 
         if (copaymentAmount > paymentAmount) {
             throw new RuntimeException("Copayment amount must be less than or equal to payment amount");
+        }
+    }
+
+    private void validateFiniteAmount(Double amount, String fieldName) {
+        if (amount == null) {
+            return;
+        }
+
+        if (!Double.isFinite(amount)) {
+            throw new RuntimeException(fieldName + " must be a finite number");
         }
     }
 }
