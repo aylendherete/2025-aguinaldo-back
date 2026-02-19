@@ -266,6 +266,7 @@ class AuthServiceTest {
             user.getSurname(),
             user.getRole(),
             user.getStatus(),
+            user.getGender(),
             "access-token",
             "refresh-token"
         );
@@ -350,6 +351,7 @@ class AuthServiceTest {
         user.setName("John");
         user.setSurname("Doe");
         user.setRole("PATIENT");
+        user.setGender("FEMALE");
 
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setUser(user);
@@ -364,7 +366,8 @@ class AuthServiceTest {
             user.getSurname(),
             user.getRole(),
             "ACTIVE",
-            mockedNewAccessToken,
+            "FEMALE",
+            "new-access-token",
             "new-refresh-token-hash"
         );
 

@@ -1,0 +1,34 @@
+meta {
+  name: Update Payment Register Bonus Amount Overflow
+  type: http
+  seq: 31
+}
+
+put {
+  url: {{baseUrl}}/api/payments/turn/{{turnId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{doctorAccessToken}}
+}
+
+body:json{
+  {
+    "paymentStatus": "BONUS",
+    "paymentAmount": 1e309
+  }
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("Should reject overflow BONUS payment amount", function() {
+    const body = res.getBody();
+    expect(res.getStatus()).to.equal(400);
+    expect(body.message || body.error).to.include("Payment amount must be a finite number");
+  });
+}

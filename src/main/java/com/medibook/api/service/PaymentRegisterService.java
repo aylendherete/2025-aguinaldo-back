@@ -86,13 +86,58 @@ public class PaymentRegisterService {
         if (turn.getStatus() == null || !"COMPLETED".equals(turn.getStatus())) {
             throw new RuntimeException("Payment register can only be updated for completed turns");
         }
-        
-        PaymentRegister payment = paymentRepo.findByTurnId(turnId)
-            .orElseThrow(() -> new RuntimeException("Payment register not found for this turn"));
 
         String requestedStatus = null;
         if (request.getPaymentStatus() != null) {
             requestedStatus = normalizeStatus(request.getPaymentStatus());
+            if ("PENDING".equals(requestedStatus)) {
+                throw new RuntimeException("Payment status cannot be updated to PENDING");
+            }
+        }
+
+        String requestedMethod = null;
+        if (request.getMethod() != null) {
+            requestedMethod = normalizeMethod(request.getMethod());
+        }
+
+        if (requestedStatus != null && requestedMethod != null) {
+            if ("BONUS".equals(requestedStatus) && !"BONUS".equals(requestedMethod)) {
+                throw new RuntimeException("Payment method must be BONUS when payment status is BONUS");
+            }
+
+            if ("HEALTH INSURANCE".equals(requestedStatus) && !"HEALTH INSURANCE".equals(requestedMethod)) {
+                throw new RuntimeException("Payment method must be HEALTH INSURANCE when payment status is HEALTH INSURANCE");
+            }
+
+            if ("BONUS".equals(requestedMethod) && !"BONUS".equals(requestedStatus)) {
+                throw new RuntimeException("Payment status must be BONUS when payment method is BONUS");
+            }
+
+            if ("HEALTH INSURANCE".equals(requestedMethod) && !"HEALTH INSURANCE".equals(requestedStatus)) {
+                throw new RuntimeException("Payment status must be HEALTH INSURANCE when payment method is HEALTH INSURANCE");
+            }
+        }
+
+        Double requestedPaymentAmount = request.getPaymentAmount();
+        Double requestedCopaymentAmount = request.getCopaymentAmount();
+
+        validateFiniteAmount(requestedPaymentAmount, "Payment amount");
+        validateFiniteAmount(requestedCopaymentAmount, "Copayment amount");
+
+        if (requestedPaymentAmount != null && requestedPaymentAmount <= 0) {
+            if ("BONUS".equals(requestedStatus)) {
+                throw new RuntimeException("Payment amount must be greater than zero when payment status is BONUS");
+            }
+            throw new RuntimeException("Payment amount must be greater than zero");
+        }
+        if  ("HEALTH INSURANCE".equals(requestedStatus) && (requestedCopaymentAmount == null || requestedCopaymentAmount < 0)) {
+            throw new RuntimeException("Copayment amount must be provided and greater or equal than zero when payment status is HEALTH INSURANCE");
+        }
+        
+        PaymentRegister payment = paymentRepo.findByTurnId(turnId)
+            .orElseThrow(() -> new RuntimeException("Payment register not found for this turn"));
+
+        if (request.getPaymentStatus() != null) {
             if ("CANCELED".equals(requestedStatus)) {
                 validateCancelRequestWithoutExtraFields(request);
                 validateCancelableStatus(payment.getPaymentStatus());
@@ -115,7 +160,7 @@ public class PaymentRegisterService {
         }
         String targetMethod = payment.getMethod();
         if (request.getMethod() != null) {
-            targetMethod = normalizeMethod(request.getMethod());
+            targetMethod = requestedMethod;
         }
 
         if ("HEALTH INSURANCE".equals(targetStatus)) {
@@ -289,12 +334,25 @@ public class PaymentRegisterService {
             return;
         }
 
+        validateFiniteAmount(paymentAmount, "Payment amount");
+        validateFiniteAmount(copaymentAmount, "Copayment amount");
+
         if (paymentAmount == null) {
             throw new RuntimeException("Payment amount is required when copayment amount is set");
         }
 
         if (copaymentAmount > paymentAmount) {
             throw new RuntimeException("Copayment amount must be less than or equal to payment amount");
+        }
+    }
+
+    private void validateFiniteAmount(Double amount, String fieldName) {
+        if (amount == null) {
+            return;
+        }
+
+        if (!Double.isFinite(amount)) {
+            throw new RuntimeException(fieldName + " must be a finite number");
         }
     }
 }

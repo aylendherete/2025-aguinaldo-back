@@ -59,7 +59,7 @@ public class TurnModifyRequestService {
         Optional<TurnModifyRequest> existingRequest = turnModifyRequestRepository
                 .findPendingRequestByTurnAndPatient(dto.getTurnId(), patient.getId());
         if (existingRequest.isPresent()) {
-            throw new IllegalArgumentException("There is already a pending modification request for this appointment");
+            throw new IllegalArgumentException("Ya hay una solicitud de modificación pendiente para este turno");
         }
         
         TurnModifyRequest modifyRequest = TurnModifyRequest.builder()
