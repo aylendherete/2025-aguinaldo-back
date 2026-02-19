@@ -86,13 +86,29 @@ public class PaymentRegisterService {
         if (turn.getStatus() == null || !"COMPLETED".equals(turn.getStatus())) {
             throw new RuntimeException("Payment register can only be updated for completed turns");
         }
-        
-        PaymentRegister payment = paymentRepo.findByTurnId(turnId)
-            .orElseThrow(() -> new RuntimeException("Payment register not found for this turn"));
 
         String requestedStatus = null;
         if (request.getPaymentStatus() != null) {
             requestedStatus = normalizeStatus(request.getPaymentStatus());
+        }
+
+        Double requestedPaymentAmount = request.getPaymentAmount();
+        Double requestedCopaymentAmount = request.getCopaymentAmount();
+
+        if (!"BONUS".equals(requestedStatus) && requestedPaymentAmount != null && requestedPaymentAmount <= 0) {
+            throw new RuntimeException("Payment amount must be greater than zero");
+        }
+        if ("BONUS".equals(requestedStatus) && requestedPaymentAmount != null && requestedPaymentAmount != 0) {
+            throw new RuntimeException("Payment amount must be zero when payment status is BONUS");
+        }
+        if  ("HEALTH INSURANCE".equals(requestedStatus) && (requestedCopaymentAmount == null || requestedCopaymentAmount < 0)) {
+            throw new RuntimeException("Copayment amount must be provided and greater or equal than zero when payment status is HEALTH INSURANCE");
+        }
+        
+        PaymentRegister payment = paymentRepo.findByTurnId(turnId)
+            .orElseThrow(() -> new RuntimeException("Payment register not found for this turn"));
+
+        if (request.getPaymentStatus() != null) {
             if ("CANCELED".equals(requestedStatus)) {
                 validateCancelRequestWithoutExtraFields(request);
                 validateCancelableStatus(payment.getPaymentStatus());

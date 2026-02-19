@@ -1,0 +1,35 @@
+meta {
+  name: Update Payment Register Non Bonus Zero Amount
+  type: http
+  seq: 25
+}
+
+put {
+  url: {{baseUrl}}/api/payments/turn/{{turnId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{doctorAccessToken}}
+}
+
+body:json{
+  {
+    "paymentStatus": "PAID",
+    "method": "CASH",
+    "paymentAmount": 0
+  }
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("Should reject non-BONUS payment amount equal to zero", function() {
+    const body = res.getBody();
+    expect(res.getStatus()).to.equal(400);
+    expect(body.message || body.error).to.include("Payment amount must be greater than zero");
+  });
+}
