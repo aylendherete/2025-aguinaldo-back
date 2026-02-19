@@ -668,37 +668,19 @@ class PaymentRegisterServiceTest {
     }
 
     @Test
-    void updatePaymentRegister_withCanceledStatus_whenCurrentStatusNotPending_cancelsPayment() {
+    void updatePaymentRegister_withCurrentStatusPaid_throwsException() {
         PaymentRegisterRequestDTO requestDTO = new PaymentRegisterRequestDTO();
         requestDTO.setPaymentStatus("CANCELED");
         savedPayment.setPaymentStatus("PAID");
-        savedPayment.setPaymentAmount(100.0);
-        savedPayment.setMethod("CASH");
-        savedPayment.setCopaymentAmount(20.0);
-        Instant originalPaidAt = Instant.parse("2025-01-01T10:00:00Z");
-        savedPayment.setPaidAt(originalPaidAt);
+        turn.setPaymentRegister(savedPayment);
 
         when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
-        when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.of(savedPayment));
-        when(paymentRepo.save(any(PaymentRegister.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(mapper.toDTO(any(PaymentRegister.class))).thenReturn(responseDTO);
 
-        PaymentRegisterResponseDTO result = paymentRegisterService.updatePaymentRegister(
-                turnId,
-                requestDTO,
-                doctor.getId(),
-                doctor.getRole());
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                paymentRegisterService.updatePaymentRegister(turnId, requestDTO, doctor.getId(), doctor.getRole()));
 
-        assertNotNull(result);
-
-        ArgumentCaptor<PaymentRegister> captor = ArgumentCaptor.forClass(PaymentRegister.class);
-        verify(paymentRepo).save(captor.capture());
-        PaymentRegister updated = captor.getValue();
-        assertEquals("CANCELED", updated.getPaymentStatus());
-        assertEquals(100.0, updated.getPaymentAmount());
-        assertEquals("CASH", updated.getMethod());
-        assertEquals(20.0, updated.getCopaymentAmount());
-        assertEquals(originalPaidAt, updated.getPaidAt());
+        assertEquals("Payment register with status PAID cannot be updated", exception.getMessage());
+        verify(paymentRepo, never()).save(any());
     }
 
     @Test
