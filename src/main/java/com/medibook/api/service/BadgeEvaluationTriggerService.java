@@ -38,6 +38,7 @@ public class BadgeEvaluationTriggerService {
             statisticsUpdateService.updateProgressAfterRatingSync(userId);
             
             badgeService.evaluateRatingRelatedBadges(userId);
+            badgeService.evaluateTopSpecialist(user);
 
         } catch (Exception e) {
             log.error("[TRIGGER] Unexpected error evaluating rating-related badges for user {} after rating: {}", userId, e.getMessage(), e);

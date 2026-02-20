@@ -92,6 +92,8 @@ public class TurnAssignedService {
         if (daysDifference >= 1) {
             badgeEvaluationTrigger.evaluateAfterAdvanceBooking(dto.getPatientId());
         }
+
+        badgeEvaluationTrigger.evaluateAllBadges(dto.getDoctorId());
         
         try {
             String date = DateTimeUtils.formatDate(saved.getScheduledAt());
@@ -181,6 +183,10 @@ public class TurnAssignedService {
         long daysDifference = java.time.Duration.between(now, turn.getScheduledAt()).toDays();
         if (daysDifference >= 1) {
             badgeEvaluationTrigger.evaluateAfterAdvanceBooking(patientId);
+        }
+
+        if (turn.getDoctor() != null) {
+            badgeEvaluationTrigger.evaluateAllBadges(turn.getDoctor().getId());
         }
 
         return saved;

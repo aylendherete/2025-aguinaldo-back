@@ -611,7 +611,7 @@ class BadgeStatisticsUpdateServiceTest {
         ObjectNode statsJson = objectMapper.createObjectNode();
         statsJson.put("total_turns_completed", 60);
         statsJson.put("documentation_count", 40);
-        statsJson.put("total_turns_cancelled", 5);
+        statsJson.put("total_cancellations", 5);
         statsJson.put("unique_patients_served", 15);
         statsJson.put("requests_handled", 8);
         statsJson.put("total_ratings_received", 30);
@@ -908,7 +908,7 @@ class BadgeStatisticsUpdateServiceTest {
 
         ObjectNode statsJson = objectMapper.createObjectNode();
         statsJson.put("total_turns_completed", 100);
-        statsJson.put("total_turns_cancelled", 20); 
+        statsJson.put("total_cancellations", 20); 
 
         BadgeStatistics existingStats = BadgeStatistics.builder()
                 .userId(userId)
@@ -932,7 +932,7 @@ class BadgeStatisticsUpdateServiceTest {
 
         ObjectNode statsJson = objectMapper.createObjectNode();
         statsJson.put("total_turns_completed", 100);
-        statsJson.put("total_turns_cancelled", 10); 
+        statsJson.put("total_cancellations", 10); 
 
         BadgeStatistics existingStats = BadgeStatistics.builder()
                 .userId(userId)
@@ -1003,7 +1003,7 @@ class BadgeStatisticsUpdateServiceTest {
         ObjectNode statsJson = objectMapper.createObjectNode();
         statsJson.put("total_turns_completed", 150);
         statsJson.put("documentation_count", 40);
-        statsJson.put("total_turns_cancelled", 5);
+        statsJson.put("total_cancellations", 5);
         statsJson.put("unique_patients_served", 15);
         statsJson.put("requests_handled", 8);
         statsJson.put("total_ratings_received", 30);
@@ -1016,7 +1016,7 @@ class BadgeStatisticsUpdateServiceTest {
         Map<String, Object> statistics = new HashMap<>();
         statistics.put("total_turns_completed", 150);
         statistics.put("documentation_count", 40);
-        statistics.put("total_turns_cancelled", 5);
+        statistics.put("total_cancellations", 5);
         statistics.put("unique_patients_served", 15);
         statistics.put("requests_handled", 8);
         statistics.put("total_ratings_received", 30);
@@ -1046,7 +1046,7 @@ class BadgeStatisticsUpdateServiceTest {
         Map<String, Object> statistics = new HashMap<>();
         statistics.put("total_turns_completed", 10);
         statistics.put("documentation_count", 2);
-        statistics.put("total_turns_cancelled", 5);
+        statistics.put("total_cancellations", 5);
         statistics.put("unique_patients_served", 2);
         statistics.put("requests_handled", 1);
         statistics.put("total_ratings_received", 5);
@@ -1110,7 +1110,7 @@ class BadgeStatisticsUpdateServiceTest {
     void updateDoctorBadgeProgress_LessThan50Turns_CoversScaledRequirements() {
         Map<String, Object> statistics = new HashMap<>();
         statistics.put("documentation_count", 10); 
-        statistics.put("total_turns_cancelled", 2);
+        statistics.put("total_cancellations", 2);
         statistics.put("unique_patients_served", 8);
         statistics.put("requests_handled", 5);
         statistics.put("total_ratings_received", 50);
@@ -1139,7 +1139,7 @@ class BadgeStatisticsUpdateServiceTest {
     void updateDoctorBadgeProgress_50OrMoreTurns_CoversFullRequirements() {
         Map<String, Object> statistics = new HashMap<>();
         statistics.put("documentation_count", 40); 
-        statistics.put("total_turns_cancelled", 5); 
+        statistics.put("total_cancellations", 5); 
         statistics.put("unique_patients_served", 12);
         statistics.put("requests_handled", 8);
         statistics.put("total_ratings_received", 100);
@@ -1168,7 +1168,7 @@ class BadgeStatisticsUpdateServiceTest {
     void updateDoctorBadgeProgress_HighCancellationRate_CoversFailureCondition() {
         Map<String, Object> statistics = new HashMap<>();
         statistics.put("documentation_count", 40);
-        statistics.put("total_turns_cancelled", 20); 
+        statistics.put("total_cancellations", 20); 
         statistics.put("unique_patients_served", 12);
         statistics.put("requests_handled", 8);
         statistics.put("total_ratings_received", 100);
@@ -1190,7 +1190,7 @@ class BadgeStatisticsUpdateServiceTest {
     void updateDoctorBadgeProgress_LowRequestsHandled_CoversPartialProgress() {
         Map<String, Object> statistics = new HashMap<>();
         statistics.put("documentation_count", 40);
-        statistics.put("total_turns_cancelled", 5);
+        statistics.put("total_cancellations", 5);
         statistics.put("unique_patients_served", 12);
         statistics.put("total_requests_handled", 4); 
         statistics.put("total_ratings_received", 100);
