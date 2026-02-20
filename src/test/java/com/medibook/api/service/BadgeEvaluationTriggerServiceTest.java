@@ -61,6 +61,7 @@ class BadgeEvaluationTriggerServiceTest {
         verify(statisticsUpdateService).updateAfterRatingAddedSync(doctorId, communicationScore, empathyScore, punctualityScore);
         verify(statisticsUpdateService).updateProgressAfterRatingSync(doctorId);
         verify(badgeService).evaluateRatingRelatedBadges(doctorId);
+        verify(badgeService).evaluateTopSpecialist(doctor);
     }
 
     @Test
@@ -104,6 +105,7 @@ class BadgeEvaluationTriggerServiceTest {
         verify(statisticsUpdateService).updateAfterRatingAddedSync(doctorId, 4, 5, 4);
         verify(statisticsUpdateService, never()).updateProgressAfterRatingSync(any());
         verify(badgeService, never()).evaluateRatingRelatedBadges(any());
+        verify(badgeService, never()).evaluateTopSpecialist(any());
     }
 
     @Test

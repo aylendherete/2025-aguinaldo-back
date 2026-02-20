@@ -1383,7 +1383,7 @@ class BadgeServiceTest {
 
         badgeService.evaluateAllBadges(doctorId);
 
-        verify(badgeRepository).findByUser_IdAndBadgeType(doctorId, "DOCTOR_MEDICAL_LEGEND");
+        verify(badgeRepository, atLeastOnce()).findByUser_IdAndBadgeType(doctorId, "DOCTOR_MEDICAL_LEGEND");
     }
 
     @Test

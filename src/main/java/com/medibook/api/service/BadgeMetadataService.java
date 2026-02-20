@@ -104,7 +104,7 @@ public class BadgeMetadataService {
                 .description("Atiende a una amplia variedad de pacientes")
                 .icon("People")
                 .color("#00BCD4")
-                .criteria("Atendió a 25+ pacientes distintos")
+                .criteria("25+ pacientes distintos solicitan turnos")
                 .build());
 
         doctorBadgeMetadata.put("DOCTOR_TOP_SPECIALIST", BadgeMetadata.builder()

@@ -519,14 +519,7 @@ public class BadgeService {
             BadgeStatistics stats = getOrCreateStatistics(doctorId);
             JsonNode statistics = stats.getStatistics();
 
-            int totalTurnsCompleted = statistics.path("total_turns_completed").asInt(0);
             int totalDocumentedCount = statistics.path("documentation_count").asInt(0);
-
-            if (totalTurnsCompleted < 50) {
-                deactivateBadge(doctorId, "DOCTOR_COMPLETE_DOCUMENTER");
-                updateProgress(doctorId, "DOCTOR_COMPLETE_DOCUMENTER", ((double) totalTurnsCompleted / 50) * 100);
-                return;
-            }
 
             double progress = Math.min(((double) totalDocumentedCount / COMPLETE_DOCUMENTER_THRESHOLD) * 100, 100.0);
 
@@ -704,6 +697,8 @@ public class BadgeService {
     void evaluateMedicalLegend(User doctor) {
         UUID doctorId = doctor.getId();
         try {
+            BadgeStatistics stats = getOrCreateStatistics(doctorId);
+
             long activeRequiredBadges = MEDICAL_LEGEND_REQUIRED_BADGES.stream()
                     .filter(badgeType -> badgeRepository.existsByUser_IdAndBadgeTypeAndIsActive(doctorId, badgeType, true))
                     .count();
