@@ -326,6 +326,9 @@ public class PaymentRegisterService {
         if (currentStatus == null || "PENDING".equals(currentStatus)) {
             throw new RuntimeException("Payment with status PENDING cannot be canceled");
         }
+        if (currentStatus == null || "CANCELED".equals(currentStatus)) {
+            throw new RuntimeException("Payment with status CANCELED cannot be canceled again");
+        }
     }
 
     private void validateCancelRequestWithoutExtraFields(PaymentRegisterRequestDTO request) {
