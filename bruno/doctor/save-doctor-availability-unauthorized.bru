@@ -4,7 +4,7 @@ meta {
   seq: 7
 }
 
-put {
+post {
   url: {{host}}/api/doctors/{{doctorId}}/availability
   body: json
   auth: none
@@ -15,17 +15,17 @@ headers {
 }
 
 body:json {
-  [
-    {
-      "dayOfWeek": "MONDAY",
-      "timeRanges": [
-        {
-          "startTime": "09:00",
-          "endTime": "17:00"
-        }
-      ]
-    }
-  ]
+  {
+    "weeklyAvailability": [
+      {
+        "day": "MONDAY",
+        "enabled": true,
+        "ranges": [
+          { "start": "09:00", "end": "17:00" }
+        ]
+      }
+    ]
+  }
 }
 
 vars:pre-request {

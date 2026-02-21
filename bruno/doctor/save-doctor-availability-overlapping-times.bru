@@ -4,14 +4,14 @@ meta {
   seq: 6
 }
 
-put {
+post {
   url: {{host}}/api/doctors/{{doctorId}}/availability
   body: json
   auth: bearer
 }
 
 auth:bearer {
-  token: {{authToken}}
+  token: {{doctorAccessToken}}
 }
 
 headers {
@@ -19,45 +19,24 @@ headers {
 }
 
 body:json {
-  [
-    {
-      "dayOfWeek": "MONDAY",
-      "timeRanges": [
-        {
-          "startTime": "09:00",
-          "endTime": "13:00"
-        },
-        {
-          "startTime": "12:00",
-          "endTime": "16:00"
-        }
-      ]
-    },
-    {
-      "dayOfWeek": "TUESDAY",
-      "timeRanges": []
-    },
-    {
-      "dayOfWeek": "WEDNESDAY",
-      "timeRanges": []
-    },
-    {
-      "dayOfWeek": "THURSDAY",
-      "timeRanges": []
-    },
-    {
-      "dayOfWeek": "FRIDAY",
-      "timeRanges": []
-    },
-    {
-      "dayOfWeek": "SATURDAY",
-      "timeRanges": []
-    },
-    {
-      "dayOfWeek": "SUNDAY",
-      "timeRanges": []
-    }
-  ]
+  {
+    "weeklyAvailability": [
+      {
+        "day": "MONDAY",
+        "enabled": true,
+        "ranges": [
+          { "start": "09:00", "end": "13:00" },
+          { "start": "12:00", "end": "16:00" }
+        ]
+      },
+      { "day": "TUESDAY", "enabled": false, "ranges": [] },
+      { "day": "WEDNESDAY", "enabled": false, "ranges": [] },
+      { "day": "THURSDAY", "enabled": false, "ranges": [] },
+      { "day": "FRIDAY", "enabled": false, "ranges": [] },
+      { "day": "SATURDAY", "enabled": false, "ranges": [] },
+      { "day": "SUNDAY", "enabled": false, "ranges": [] }
+    ]
+  }
 }
 
 vars:pre-request {
