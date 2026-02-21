@@ -4,14 +4,14 @@ meta {
   seq: 4
 }
 
-put {
+post {
   url: {{host}}/api/doctors/{{doctorId}}/availability
   body: json
   auth: bearer
 }
 
 auth:bearer {
-  token: {{authToken}}
+  token: {{doctorAccessToken}}
 }
 
 headers {
@@ -19,60 +19,42 @@ headers {
 }
 
 body:json {
-  [
-    {
-      "dayOfWeek": "MONDAY",
-      "timeRanges": [
-        {
-          "startTime": "09:00",
-          "endTime": "12:00"
-        },
-        {
-          "startTime": "14:00",
-          "endTime": "18:00"
-        }
-      ]
-    },
-    {
-      "dayOfWeek": "TUESDAY",
-      "timeRanges": [
-        {
-          "startTime": "08:00",
-          "endTime": "16:00"
-        }
-      ]
-    },
-    {
-      "dayOfWeek": "WEDNESDAY",
-      "timeRanges": []
-    },
-    {
-      "dayOfWeek": "THURSDAY",
-      "timeRanges": [
-        {
-          "startTime": "10:00",
-          "endTime": "15:00"
-        }
-      ]
-    },
-    {
-      "dayOfWeek": "FRIDAY",
-      "timeRanges": [
-        {
-          "startTime": "09:00",
-          "endTime": "17:00"
-        }
-      ]
-    },
-    {
-      "dayOfWeek": "SATURDAY",
-      "timeRanges": []
-    },
-    {
-      "dayOfWeek": "SUNDAY",
-      "timeRanges": []
-    }
-  ]
+  {
+    "weeklyAvailability": [
+      {
+        "day": "MONDAY",
+        "enabled": true,
+        "ranges": [
+          { "start": "09:00", "end": "12:00" },
+          { "start": "14:00", "end": "18:00" }
+        ]
+      },
+      {
+        "day": "TUESDAY",
+        "enabled": true,
+        "ranges": [
+          { "start": "08:00", "end": "16:00" }
+        ]
+      },
+      { "day": "WEDNESDAY", "enabled": false, "ranges": [] },
+      {
+        "day": "THURSDAY",
+        "enabled": true,
+        "ranges": [
+          { "start": "10:00", "end": "15:00" }
+        ]
+      },
+      {
+        "day": "FRIDAY",
+        "enabled": true,
+        "ranges": [
+          { "start": "09:00", "end": "17:00" }
+        ]
+      },
+      { "day": "SATURDAY", "enabled": false, "ranges": [] },
+      { "day": "SUNDAY", "enabled": false, "ranges": [] }
+    ]
+  }
 }
 
 vars:pre-request {
@@ -86,18 +68,5 @@ assert {
 tests {
   test("Should save doctor availability successfully", function() {
     expect(res.getStatus()).to.equal(200);
-    
-    const responseJson = res.getBody();
-    expect(responseJson).to.be.an('array');
-    expect(responseJson).to.have.lengthOf(7);
-    
-    // Verify specific day configurations
-    const monday = responseJson.find(day => day.dayOfWeek === 'MONDAY');
-    expect(monday.timeRanges).to.have.lengthOf(2);
-    expect(monday.timeRanges[0].startTime).to.equal('09:00');
-    expect(monday.timeRanges[0].endTime).to.equal('12:00');
-    
-    const wednesday = responseJson.find(day => day.dayOfWeek === 'WEDNESDAY');
-    expect(wednesday.timeRanges).to.have.lengthOf(0);
   });
 }

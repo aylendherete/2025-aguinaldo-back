@@ -776,6 +776,20 @@ class PaymentRegisterServiceTest {
         verify(paymentRepo, never()).save(any());
     }
 
+     @Test
+    void cancelPaymentRegister_whenCurrentStatusCanceled_throwsException() {
+        savedPayment.setPaymentStatus("CANCELED");
+
+        when(turnRepo.findById(turnId)).thenReturn(Optional.of(turn));
+        when(paymentRepo.findByTurnId(turnId)).thenReturn(Optional.of(savedPayment));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                paymentRegisterService.cancelPaymentRegister(turnId, doctor.getId(), doctor.getRole()));
+
+        assertEquals("Payment with status CANCELED cannot be canceled again", exception.getMessage());
+        verify(paymentRepo, never()).save(any());
+    }
+
     @Test
     void cancelPaymentRegister_whenTurnNotCompleted_throwsException() {
         turn.setStatus("SCHEDULED");

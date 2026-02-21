@@ -153,6 +153,49 @@ class DoctorAvailabilityServiceTest {
         verify(userRepository).save(doctorUser);
     }
 
+        @Test
+        void saveAvailability_OverlappingRanges_ThrowsException() throws Exception {
+        UUID doctorId = doctorUser.getId();
+        List<DayAvailabilityDTO> weeklyAvailability = List.of(
+            new DayAvailabilityDTO("MONDAY", true, List.of(
+                new TimeRangeDTO("08:00", "20:00"),
+                new TimeRangeDTO("09:00", "10:30")
+            ))
+        );
+        DoctorAvailabilityRequestDTO request = new DoctorAvailabilityRequestDTO(weeklyAvailability);
+
+        when(userRepository.findById(doctorId)).thenReturn(Optional.of(doctorUser));
+
+        RuntimeException exception = assertThrows(RuntimeException.class,
+            () -> doctorAvailabilityService.saveAvailability(doctorId, request));
+
+        assertEquals("Overlapping time ranges are not allowed for MONDAY", exception.getMessage());
+        verify(userRepository).findById(doctorId);
+        verify(objectMapper, never()).writeValueAsString(any());
+        verify(userRepository, never()).save(any());
+        }
+
+        @Test
+        void saveAvailability_RangeNotMultipleOfSlotDuration_ThrowsException() throws Exception {
+        UUID doctorId = doctorUser.getId();
+        List<DayAvailabilityDTO> weeklyAvailability = List.of(
+            new DayAvailabilityDTO("MONDAY", true, List.of(
+                new TimeRangeDTO("09:10", "10:10")
+            ))
+        );
+        DoctorAvailabilityRequestDTO request = new DoctorAvailabilityRequestDTO(weeklyAvailability);
+
+        when(userRepository.findById(doctorId)).thenReturn(Optional.of(doctorUser));
+
+        RuntimeException exception = assertThrows(RuntimeException.class,
+            () -> doctorAvailabilityService.saveAvailability(doctorId, request));
+
+        assertEquals("Time ranges must be multiples of slot duration (30 min) for MONDAY", exception.getMessage());
+        verify(userRepository).findById(doctorId);
+        verify(objectMapper, never()).writeValueAsString(any());
+        verify(userRepository, never()).save(any());
+        }
+
     @Test
     void saveAvailability_AllWeekDisabled_Success() throws Exception {
         UUID doctorId = doctorUser.getId();

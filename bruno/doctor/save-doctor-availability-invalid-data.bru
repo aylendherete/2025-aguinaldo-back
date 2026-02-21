@@ -4,14 +4,14 @@ meta {
   seq: 5
 }
 
-put {
+post {
   url: {{host}}/api/doctors/{{doctorId}}/availability
   body: json
   auth: bearer
 }
 
 auth:bearer {
-  token: {{authToken}}
+  token: {{doctorAccessToken}}
 }
 
 headers {
@@ -19,17 +19,17 @@ headers {
 }
 
 body:json {
-  [
-    {
-      "dayOfWeek": "INVALID_DAY",
-      "timeRanges": [
-        {
-          "startTime": "25:00",
-          "endTime": "12:00"
-        }
-      ]
-    }
-  ]
+  {
+    "weeklyAvailability": [
+      {
+        "day": "INVALID_DAY",
+        "enabled": true,
+        "ranges": [
+          { "start": "25:00", "end": "12:00" }
+        ]
+      }
+    ]
+  }
 }
 
 vars:pre-request {
