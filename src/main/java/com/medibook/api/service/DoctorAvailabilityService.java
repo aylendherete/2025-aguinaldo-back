@@ -39,6 +39,11 @@ public class DoctorAvailabilityService {
         }
 
         DoctorProfile profile = doctor.getDoctorProfile();
+    int slotDurationMin = (profile.getSlotDurationMin() != null && profile.getSlotDurationMin() > 0)
+        ? profile.getSlotDurationMin()
+        : 30;
+
+    validateAvailabilityRanges(request, slotDurationMin);
         
         
         try {
@@ -51,6 +56,45 @@ public class DoctorAvailabilityService {
         userRepository.save(doctor);
         
         badgeEvaluationTriggerService.evaluateAfterAvailabilityConfigured(doctorId);
+    }
+
+    private void validateAvailabilityRanges(DoctorAvailabilityRequestDTO request, int slotDurationMin) {
+        if (request == null || request.getWeeklyAvailability() == null) {
+            return;
+        }
+
+        for (DayAvailabilityDTO dayAvailability : request.getWeeklyAvailability()) {
+            if (dayAvailability == null || !Boolean.TRUE.equals(dayAvailability.getEnabled()) || dayAvailability.getRanges() == null) {
+                continue;
+            }
+
+            List<TimeRangeDTO> ranges = new ArrayList<>(dayAvailability.getRanges());
+            ranges.sort((a, b) -> LocalTime.parse(a.getStart()).compareTo(LocalTime.parse(b.getStart())));
+
+            LocalTime previousEnd = null;
+            for (TimeRangeDTO range : ranges) {
+                LocalTime start = LocalTime.parse(range.getStart());
+                LocalTime end = LocalTime.parse(range.getEnd());
+
+                if (!start.isBefore(end)) {
+                    throw new IllegalArgumentException("Invalid time range for " + dayAvailability.getDay() + ": start must be before end");
+                }
+
+                int startMinutes = start.getHour() * 60 + start.getMinute();
+                int endMinutes = end.getHour() * 60 + end.getMinute();
+                int duration = endMinutes - startMinutes;
+
+                if (startMinutes % slotDurationMin != 0 || endMinutes % slotDurationMin != 0 || duration % slotDurationMin != 0) {
+                    throw new IllegalArgumentException("Time ranges must be multiples of slot duration (" + slotDurationMin + " min) for " + dayAvailability.getDay());
+                }
+
+                if (previousEnd != null && start.isBefore(previousEnd)) {
+                    throw new IllegalArgumentException("Overlapping time ranges are not allowed for " + dayAvailability.getDay());
+                }
+
+                previousEnd = end;
+            }
+        }
     }
 
     @Transactional(readOnly = true)

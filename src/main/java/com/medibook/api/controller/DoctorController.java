@@ -3,6 +3,7 @@ package com.medibook.api.controller;
 import com.medibook.api.dto.Availability.*;
 import com.medibook.api.dto.DoctorDTO;
 import com.medibook.api.dto.DoctorMetricsDTO;
+import com.medibook.api.dto.ErrorResponseDTO;
 import com.medibook.api.dto.PatientDTO;
 import com.medibook.api.dto.UpdateMedicalHistoryRequestDTO;
 import com.medibook.api.dto.CreateMedicalHistoryRequestDTO;
@@ -11,6 +12,8 @@ import com.medibook.api.dto.MedicalHistoryDTO;
 import com.medibook.api.service.DoctorAvailabilityService;
 import com.medibook.api.service.DoctorService;
 import com.medibook.api.service.MedicalHistoryService;
+import com.medibook.api.util.ErrorResponseUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -60,12 +63,21 @@ public class DoctorController {
 
     @PostMapping("/{doctorId}/availability")
     @PreAuthorize("hasRole('DOCTOR') and authentication.principal.id.equals(#doctorId)")
-    public ResponseEntity<Void> saveAvailability(
+    public ResponseEntity<?> saveAvailability(
             @PathVariable UUID doctorId,
-            @Valid @RequestBody DoctorAvailabilityRequestDTO request) {
-        
-        availabilityService.saveAvailability(doctorId, request);
-        return ResponseEntity.ok().build();
+            @Valid @RequestBody DoctorAvailabilityRequestDTO request,
+            HttpServletRequest httpRequest) {
+
+        try {
+            availabilityService.saveAvailability(doctorId, request);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException ex) {
+            ResponseEntity<ErrorResponseDTO> errorResponse = ErrorResponseUtil.createBadRequestResponse(
+                    ex.getMessage(),
+                    httpRequest.getRequestURI()
+            );
+            return ResponseEntity.status(errorResponse.getStatusCode()).body(errorResponse.getBody());
+        }
     }
 
     @GetMapping("/{doctorId}/availability")
