@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -23,6 +24,7 @@ import java.util.UUID;
 @Slf4j
 public class TurnModifyRequestController {
     
+    private static final ZoneId ARGENTINA_ZONE = ZoneId.of("America/Argentina/Buenos_Aires");
     private final TurnModifyRequestService turnModifyRequestService;
     
     @PostMapping
@@ -74,7 +76,9 @@ public class TurnModifyRequestController {
         }
         
         List<TurnModifyRequestResponseDTO> requests = turnModifyRequestService.getDoctorPendingRequests(authenticatedUser.getId());
-        return ResponseEntity.ok(requests);
+        return ResponseEntity.ok(requests.stream()
+                .filter(req -> req.getCurrentScheduledAt().isAfter(java.time.OffsetDateTime.now()))
+                .toList());
     }
 
     @PostMapping("/{requestId}/approve")
@@ -88,6 +92,12 @@ public class TurnModifyRequestController {
             return new ResponseEntity<>(
                     Map.of("error", "Forbidden", "message", "Only doctors can approve modification requests"),
                     HttpStatus.FORBIDDEN);
+        }
+
+        if(turnModifyRequestService.getRequestById(requestId).getCurrentScheduledAt().isBefore(java.time.OffsetDateTime.now())){
+            return new ResponseEntity<>(
+                    Map.of("error", "Bad Request", "message", "Cannot approve modification requests for past turns"),
+                    HttpStatus.BAD_REQUEST);
         }
         
         try {
@@ -116,6 +126,12 @@ public class TurnModifyRequestController {
             return new ResponseEntity<>(
                     Map.of("error", "Forbidden", "message", "Only doctors can reject modification requests"),
                     HttpStatus.FORBIDDEN);
+        }
+
+        if(turnModifyRequestService.getRequestById(requestId).getCurrentScheduledAt().isBefore(java.time.OffsetDateTime.now(ARGENTINA_ZONE))){
+            return new ResponseEntity<>(
+                    Map.of("error", "Bad Request", "message", "Cannot reject modification requests for past turns"),
+                    HttpStatus.BAD_REQUEST);
         }
         
         try {
