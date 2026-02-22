@@ -1,0 +1,21 @@
+meta {
+  name: Create Turn Modify Request - Past Date
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/turns/modify-requests/{{requestId}}/reject
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{doctorAccessToken}}
+}
+
+
+assert {
+  res.status: eq 400
+  res.body.message: "Cannot reject modification requests for past turns"
+  res.body.error: eq "Bad Request"
+}   

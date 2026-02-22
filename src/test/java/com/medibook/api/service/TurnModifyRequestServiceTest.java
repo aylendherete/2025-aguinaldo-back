@@ -405,4 +405,45 @@ class TurnModifyRequestServiceTest {
                 any(String.class)
         );
     }
+
+    @Test
+    void  approveRequest_ForPastTurn_ShouldReturnBadRequest(){
+        modifyRequest.setStatus("PENDING");
+        modifyRequest.setCurrentScheduledAt(OffsetDateTime.now().minusDays(1));
+        when(turnModifyRequestRepository.findById(modifyRequest.getId())).thenReturn(Optional.of(modifyRequest));
+    }
+
+    @Test
+    void rejectRequest_ForPastTurn_ShouldReturnBadRequest(){
+        modifyRequest.setStatus("PENDING");
+        modifyRequest.setCurrentScheduledAt(OffsetDateTime.now().minusDays(1));
+        when(turnModifyRequestRepository.findById(modifyRequest.getId())).thenReturn(Optional.of(modifyRequest));
+    }
+
+    @Test
+    void getModifyRequest_Filtered_WithoutPastTurns(){
+        TurnModifyRequest pastRequest = TurnModifyRequest.builder()
+                .id(UUID.randomUUID())
+                .turnAssigned(turnAssigned)
+                .patient(patient)
+                .doctor(doctor)
+                .currentScheduledAt(OffsetDateTime.now().minusDays(1))
+                .requestedScheduledAt(OffsetDateTime.now().plusDays(1))
+                .status("PENDING")
+                .build();
+
+        List<TurnModifyRequest> requests = Arrays.asList(modifyRequest, pastRequest);
+        when(turnModifyRequestRepository.findByDoctor_IdAndStatusOrderByIdDesc(doctor.getId(), "PENDING"))
+                .thenReturn(requests);
+        when(mapper.toResponseDTO(modifyRequest)).thenReturn(responseDTO);
+
+        List<TurnModifyRequestResponseDTO> result = service.getDoctorPendingRequests(doctor.getId());
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(responseDTO, result.get(0));
+        verify(turnModifyRequestRepository).findByDoctor_IdAndStatusOrderByIdDesc(doctor.getId(), "PENDING");
+        verify(mapper).toResponseDTO(modifyRequest);
+    }
+    
 }

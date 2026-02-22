@@ -54,11 +54,12 @@ class TurnModifyRequestControllerTest {
         
         requestDTO = new TurnModifyRequestDTO();
         requestDTO.setTurnId(UUID.randomUUID());
-        requestDTO.setNewScheduledAt(OffsetDateTime.now().plusDays(1));
+        requestDTO.setNewScheduledAt(OffsetDateTime.now().plusDays(2));
         
         responseDTO = new TurnModifyRequestResponseDTO();
         responseDTO.setId(UUID.randomUUID());
         responseDTO.setStatus("PENDING");
+        responseDTO.setCurrentScheduledAt(OffsetDateTime.now().plusDays(1));
     }
 
     @Test
@@ -169,6 +170,7 @@ class TurnModifyRequestControllerTest {
 
     @Test
     void getPendingRequests_WithDoctorUser_ShouldReturnPendingRequests() {
+  
         List<TurnModifyRequestResponseDTO> requests = Arrays.asList(responseDTO);
         when(request.getAttribute("authenticatedUser")).thenReturn(doctorUser);
         when(turnModifyRequestService.getDoctorPendingRequests(doctorUser.getId())).thenReturn(requests);
@@ -197,4 +199,71 @@ class TurnModifyRequestControllerTest {
             verifyNoInteractions(turnModifyRequestService);
         }
     }
+
+    @Test
+    void approveRequest_ForPastTurn_ShouldReturnBadRequest() {
+        UUID requestId = UUID.randomUUID();
+        responseDTO.setCurrentScheduledAt(OffsetDateTime.now().minusDays(1)); // Simulate past turn
+        when(request.getAttribute("authenticatedUser")).thenReturn(doctorUser);
+        when(turnModifyRequestService.getRequestById(requestId)).thenReturn(responseDTO);
+        
+        try (MockedStatic<AuthorizationUtil> authUtil = mockStatic(AuthorizationUtil.class)) {
+            authUtil.when(() -> AuthorizationUtil.isDoctor(doctorUser)).thenReturn(true);
+            
+            ResponseEntity<Object> result = controller.approveModifyRequest(requestId, request);
+            
+            assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+            @SuppressWarnings("unchecked")
+            Map<String, String> body = (Map<String, String>) result.getBody();
+            assertNotNull(body);
+            assertEquals("Bad Request", body.get("error"));
+            assertEquals("Cannot approve modification requests for past turns", body.get("message"));
+        }
+    }
+
+    @Test
+    void rejectRequest_ForPastTurn_ShouldReturnBadRequest() {
+        UUID requestId = UUID.randomUUID();
+        responseDTO.setCurrentScheduledAt(OffsetDateTime.now().minusDays(1)); // Simulate past turn
+        when(request.getAttribute("authenticatedUser")).thenReturn(doctorUser);
+        when(turnModifyRequestService.getRequestById(requestId)).thenReturn(responseDTO);
+        
+        try (MockedStatic<AuthorizationUtil> authUtil = mockStatic(AuthorizationUtil.class)) {
+            authUtil.when(() -> AuthorizationUtil.isDoctor(doctorUser)).thenReturn(true);
+            
+            ResponseEntity<Object> result = controller.rejectModifyRequest(requestId, request);
+            
+            assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+            @SuppressWarnings("unchecked")
+            Map<String, String> body = (Map<String, String>) result.getBody();
+            assertNotNull(body);
+            assertEquals("Bad Request", body.get("error"));
+            assertEquals("Cannot reject modification requests for past turns", body.get("message"));
+        }
+    }
+
+
+    @Test 
+    void getModifyRequest_Filtered_WithoutPastTurns() {
+        TurnModifyRequestResponseDTO pastRequest = new TurnModifyRequestResponseDTO();
+        pastRequest.setId(UUID.randomUUID());
+        pastRequest.setStatus("PENDING");
+        pastRequest.setCurrentScheduledAt(OffsetDateTime.now().minusDays(1)); // Past turn
+        
+        List<TurnModifyRequestResponseDTO> requests = Arrays.asList(responseDTO, pastRequest);
+        when(request.getAttribute("authenticatedUser")).thenReturn(doctorUser);
+        when(turnModifyRequestService.getDoctorPendingRequests(doctorUser.getId())).thenReturn(requests);
+        
+        try (MockedStatic<AuthorizationUtil> authUtil = mockStatic(AuthorizationUtil.class)) {
+            authUtil.when(() -> AuthorizationUtil.isDoctor(doctorUser)).thenReturn(true);
+            
+            ResponseEntity<List<TurnModifyRequestResponseDTO>> result = controller.getPendingRequests(request);
+            
+            assertEquals(HttpStatus.OK, result.getStatusCode());
+            assertEquals(1, result.getBody().size());
+            assertEquals(responseDTO, result.getBody().get(0));
+            verify(turnModifyRequestService).getDoctorPendingRequests(doctorUser.getId());
+        }
+    }
+       
 }

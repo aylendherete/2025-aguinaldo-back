@@ -87,6 +87,7 @@ public class TurnModifyRequestService {
         List<TurnModifyRequest> requests = turnModifyRequestRepository
                 .findByDoctor_IdAndStatusOrderByIdDesc(doctorId, "PENDING");
         return requests.stream()
+                .filter(request -> !request.getCurrentScheduledAt().isBefore(OffsetDateTime.now(ARGENTINA_ZONE)))
                 .map(mapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -106,6 +107,10 @@ public class TurnModifyRequestService {
 
         if (!"PENDING".equals(request.getStatus())) {
             throw new IllegalArgumentException("Request is not pending");
+        }
+
+        if(request.getCurrentScheduledAt().isBefore(OffsetDateTime.now(ARGENTINA_ZONE))) {
+            throw new IllegalArgumentException("Cannot approve modification requests for past turns");
         }
 
         TurnAssigned turn = request.getTurnAssigned();
@@ -199,6 +204,10 @@ public class TurnModifyRequestService {
             throw new IllegalArgumentException("You can only reject requests for your own appointments");
         }
 
+        if(request.getCurrentScheduledAt().isBefore(OffsetDateTime.now(ARGENTINA_ZONE))) {
+            throw new IllegalArgumentException("Cannot reject modification requests for past turns");
+        }
+
         if (!"PENDING".equals(request.getStatus())) {
             throw new IllegalArgumentException("Request is not pending");
         }
@@ -225,5 +234,12 @@ public class TurnModifyRequestService {
         badgeEvaluationTrigger.evaluateAfterModifyRequestHandled(doctor.getId());
 
         return mapper.toResponseDTO(savedRequest);
+    }
+
+    public TurnModifyRequestResponseDTO getRequestById(UUID requestId) {
+        TurnModifyRequest request = turnModifyRequestRepository.findById(requestId)
+                .orElseThrow(() -> new IllegalArgumentException("Modify request not found"));
+        return mapper.toResponseDTO(request);
+        
     }
 }
